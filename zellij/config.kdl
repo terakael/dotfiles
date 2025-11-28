@@ -29,6 +29,7 @@ keybinds clear-defaults=true {
         bind "\"" { NewPane "down"; SwitchToMode "normal"; }
         bind "%" { NewPane "right"; SwitchToMode "normal"; }
         bind "x" { CloseFocus; SwitchToMode "normal"; }
+        bind "&" { CloseTab; SwitchToMode "normal"; }
         bind "q" { Quit; }
     }
     locked {
