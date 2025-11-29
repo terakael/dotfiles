@@ -1,0 +1,12 @@
+gui:
+  showBottomLine: false
+promptToReturnFromSubprocess: false
+
+keybinding:
+  universal:
+    nextTab: L
+    prevTab: H
+    nextBlock-alt: J
+    prevBlock-alt: K
+    scrollLeft: h
+    scrollRight: l
