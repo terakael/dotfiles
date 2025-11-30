@@ -29,7 +29,7 @@ local colors = {
   -- Additional UI colors
   dark_gray = '#2d2a27',
   code_gray = '#302d2a',
-  selection_bg = '#1a1816',
+  selection_bg = '#3d4d45',
   panel_bg = '#30312e',
 
   -- Special
