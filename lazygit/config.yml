@@ -1,5 +1,6 @@
 gui:
   showBottomLine: false
+  scrollHeight: 20
 promptToReturnFromSubprocess: false
 
 keybinding:
