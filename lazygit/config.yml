@@ -1,8 +1,8 @@
 gui:
   showBottomLine: false
   scrollHeight: 20
+  sidePanelWidth: 0.2
 promptToReturnFromSubprocess: false
-
 keybinding:
   universal:
     nextTab: L
@@ -11,3 +11,7 @@ keybinding:
     prevBlock-alt: K
     scrollLeft: h
     scrollRight: l
+git:
+  pagers:
+    - pager: delta -s --paging=never
+      externalDiffCommand: difft --color=always
