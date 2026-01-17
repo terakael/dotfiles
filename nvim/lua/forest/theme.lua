@@ -127,11 +127,19 @@ function M.setup()
   hl('@variable', { fg = colors.fg })
   hl('@variable.builtin', { fg = colors.magenta })
   hl('@variable.parameter', { fg = colors.blue })
-  hl('@variable.member', { fg = colors.fg })
+  hl('@variable.member', { fg = colors.yellow })
+  
+  -- Helm/gotmpl template variables - nested object properties
+  hl('@variable.member.helm', { fg = colors.yellow })
+  hl('@variable.member.gotmpl', { fg = colors.yellow })
   
   hl('@constant', { fg = colors.magenta })
   hl('@constant.builtin', { fg = colors.magenta })
   hl('@constant.macro', { fg = colors.red })
+  
+  -- Helm-specific constants (.Values, .Release, .Chart, etc.)
+  hl('@constant.builtin.helm', { fg = colors.bright_magenta, bold = true })
+  hl('@constant.builtin.gotmpl', { fg = colors.bright_magenta, bold = true })
   
   hl('@string', { fg = colors.string })
   hl('@string.escape', { fg = colors.cyan })
@@ -166,8 +174,12 @@ function M.setup()
   hl('@type.definition', { fg = colors.type })
   hl('@type.qualifier', { fg = colors.keyword })
   
-  hl('@property', { fg = colors.fg })
+  hl('@property', { fg = colors.blue })
   hl('@attribute', { fg = colors.cyan })
+  
+  -- YAML-specific highlights
+  hl('@string.yaml', { fg = colors.cyan })
+  hl('@property.yaml', { fg = colors.blue, bold = true })
   
   hl('@comment', { fg = colors.comment, italic = true })
   hl('@comment.documentation', { fg = colors.comment, italic = true })
@@ -179,6 +191,10 @@ function M.setup()
   hl('@punctuation.delimiter', { fg = colors.punctuation })
   hl('@punctuation.bracket', { fg = colors.punctuation })
   hl('@punctuation.special', { fg = colors.cyan })
+  
+  -- Helm/gotmpl template delimiters - make them stand out like vim-helm's PreProc
+  hl('@punctuation.bracket.helm', { fg = colors.red, bold = true })
+  hl('@punctuation.bracket.gotmpl', { fg = colors.red, bold = true })
   
   -- Rainbow brackets for better nesting visibility
   hl('RainbowDelimiterRed', { fg = colors.red })

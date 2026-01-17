@@ -123,7 +123,7 @@ vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
 vim.opt.relativenumber = true
-
+vim.opt.wrap = false
 -- Mouse mode disabled
 -- vim.opt.mouse = 'a'
 
@@ -141,7 +141,6 @@ end)
 -- Enable break indent
 vim.opt.breakindent = true
 vim.opt.autoindent = true
-vim.opt.smartindent = true
 
 -- Set default indentation (vim-sleuth will override based on file context)
 vim.opt.expandtab = true -- Use spaces instead of tabs
@@ -247,6 +246,19 @@ vim.keymap.set('i', '<M-j>', '<Esc>:m .+1<CR>==gi', { desc = 'Move line down' })
 vim.keymap.set('i', '<M-k>', '<Esc>:m .-2<CR>==gi', { desc = 'Move line up' })
 vim.keymap.set('v', '<M-j>', ":m '>+1<CR>gv=gv", { desc = 'Move selection down' })
 vim.keymap.set('v', '<M-k>', ":m '<-2<CR>gv=gv", { desc = 'Move selection up' })
+
+-- Yank filepath to clipboard
+vim.keymap.set('n', '<leader>yf', function()
+  local filepath = vim.fn.expand '%:p'
+  vim.fn.setreg('+', filepath)
+  vim.notify('Copied: ' .. filepath)
+end, { desc = '[Y]ank [F]ilepath (absolute)' })
+
+vim.keymap.set('n', '<leader>yF', function()
+  local filename = vim.fn.expand '%:t'
+  vim.fn.setreg('+', filename)
+  vim.notify('Copied: ' .. filename)
+end, { desc = '[Y]ank [F]ilename only' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -575,6 +587,16 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+      -- Visual mode: grep for selected text across project
+      vim.keymap.set('v', '<leader>sg', function()
+        -- Get the visually selected text
+        local visual_selection = vim.fn.getregion(vim.fn.getpos('v'), vim.fn.getpos('.'))
+        -- Use only the first line for multiline selections
+        local search_term = visual_selection[1] or ''
+
+        -- Open grep with the selected text, allowing editing before search
+        builtin.grep_string({ search = search_term })
+      end, { desc = '[S]earch by [G]rep (selection)' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
@@ -603,6 +625,16 @@ require('lazy').setup({
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
         builtin.current_buffer_fuzzy_find()
       end, { desc = '[/] Fuzzily search in current buffer' })
+      -- Visual mode: search for selected text in current buffer
+      vim.keymap.set('v', '<leader>/', function()
+        -- Get the visually selected text
+        local visual_selection = vim.fn.getregion(vim.fn.getpos('v'), vim.fn.getpos('.'))
+        -- Use only the first line for multiline selections
+        local search_term = visual_selection[1] or ''
+
+        -- Search in current buffer with the selected text
+        builtin.current_buffer_fuzzy_find({ default_text = search_term })
+      end, { desc = '[/] Search in current buffer (selection)' })
 
       -- It's also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
@@ -805,7 +837,7 @@ require('lazy').setup({
             client.server_capabilities.documentRangeFormattingProvider = false
           end,
         },
-        -- rust_analyzer = {},
+        rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -897,7 +929,7 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
-        python = { 'ruff_format', 'ruff_organize_imports' },
+        python = { 'ruff_format' },
         json = { 'prettierd', 'prettier', stop_after_first = true },
         javascript = { 'prettierd', 'prettier', stop_after_first = true },
         typescript = { 'prettierd', 'prettier', stop_after_first = true },
@@ -1027,15 +1059,16 @@ require('lazy').setup({
         end,
       })
 
-      -- Enable treesitter-based indentation for non-ruby files
-      vim.api.nvim_create_autocmd('FileType', {
-        pattern = '*',
-        callback = function()
-          if vim.bo.filetype ~= 'ruby' then
-            vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-          end
-        end,
-      })
+      -- Disable treesitter-based indentation
+      -- Treesitter indentation can be unreliable, especially in insert mode
+      -- Use filetype-specific indent files instead (python.vim, etc.)
+      -- If you want to re-enable it for specific languages, uncomment and modify:
+      -- vim.api.nvim_create_autocmd('FileType', {
+      --   pattern = { 'lua', 'javascript', 'typescript' },
+      --   callback = function()
+      --     vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+      --   end,
+      -- })
 
       -- Configure treesitter
       require('nvim-treesitter.configs').setup {
