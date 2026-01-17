@@ -14,4 +14,5 @@ return {
       legacy_computing_symbols_support = false,
     },
   },
+  { 'ThePrimeagen/vim-be-good' },
 }
