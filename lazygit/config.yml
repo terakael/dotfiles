@@ -1,8 +1,13 @@
 gui:
   showBottomLine: false
-  scrollHeight: 10
+  scrollHeight: 20
+  sidePanelWidth: 0.2
+  theme:
+    selectedLineBgColor:
+      - '#2d2a27'
+    inactiveViewSelectedLineBgColor:
+      - '#2d2a27'
 promptToReturnFromSubprocess: false
-
 keybinding:
   universal:
     nextTab: L
@@ -11,3 +16,26 @@ keybinding:
     prevBlock-alt: K
     scrollLeft: h
     scrollRight: l
+git:
+  pagers:
+    - pager: delta -s --paging=never
+      # externalDiffCommand: difft --color=always --syntax-highlight=on
+  commitPrefix:
+    - pattern: "^[^/]+/(.+)$"  # Match anything after a slash
+      replace: '[$1] '
+    - pattern: "^(.+)$"         # Match the entire branch name if no slash
+      replace: '[$1] '
+customCommands:
+  # Three-dot diff in Local Branches view
+  - key: '#'
+    context: 'localBranches'
+    description: 'Three-dot diff: checked out...selected'
+    command: 'git diff --stat -p --color=always {{.SelectedLocalBranch.Name}}...{{.CheckedOutBranch.Name}}'
+    output: popup
+    
+  # Three-dot diff in Worktrees view
+  - key: '#'
+    context: 'worktrees'
+    description: 'Three-dot diff: checked out...selected worktree'
+    command: 'git diff --stat -p --color=always {{.SelectedWorktree.Name}}...{{.CheckedOutBranch.Branch}}'
+    output: popup
