@@ -326,6 +326,15 @@ require('lazy').setup({
     'folke/snacks.nvim',
     priority = 1000,
     lazy = false,
+    keys = {
+      {
+        '<leader>z',
+        function()
+          Snacks.zen.zoom()
+        end,
+        desc = 'Zen Zoom',
+      },
+    },
     opts = {
       animate = { enabled = true },
       scroll = {
