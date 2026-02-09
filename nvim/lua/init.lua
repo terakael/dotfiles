@@ -584,6 +584,16 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+      -- Visual mode: grep for selected text across project
+      vim.keymap.set('v', '<leader>sg', function()
+        -- Get the visually selected text
+        local visual_selection = vim.fn.getregion(vim.fn.getpos 'v', vim.fn.getpos '.')
+        -- Use only the first line for multiline selections
+        local search_term = visual_selection[1] or ''
+
+        -- Open grep with the selected text, allowing editing before search
+        builtin.grep_string { search = search_term }
+      end, { desc = '[S]earch by [G]rep (selection)' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
@@ -612,6 +622,16 @@ require('lazy').setup({
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
         builtin.current_buffer_fuzzy_find()
       end, { desc = '[/] Fuzzily search in current buffer' })
+      -- Visual mode: search for selected text in current buffer
+      vim.keymap.set('v', '<leader>/', function()
+        -- Get the visually selected text
+        local visual_selection = vim.fn.getregion(vim.fn.getpos 'v', vim.fn.getpos '.')
+        -- Use only the first line for multiline selections
+        local search_term = visual_selection[1] or ''
+
+        -- Search in current buffer with the selected text
+        builtin.current_buffer_fuzzy_find { default_text = search_term }
+      end, { desc = '[/] Search in current buffer (selection)' })
 
       -- It's also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
@@ -806,6 +826,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
+        marksman = {},
         pyright = {},
         ruff = {
           -- Disable formatting since we use conform.nvim with ruff_format
