@@ -18,7 +18,7 @@ keybinding:
     scrollRight: l
 git:
   pagers:
-    - pager: delta -s --paging=never
+    - pager: delta --paging=never
       # externalDiffCommand: difft --color=always --syntax-highlight=on
   commitPrefix:
     - pattern: "^[^/]+/(.+)$"  # Match anything after a slash

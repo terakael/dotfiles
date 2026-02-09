@@ -141,6 +141,7 @@ end)
 -- Enable break indent
 vim.opt.breakindent = true
 vim.opt.autoindent = true
+vim.opt.linebreak = true
 
 -- Set default indentation (vim-sleuth will override based on file context)
 vim.opt.expandtab = true -- Use spaces instead of tabs
@@ -338,6 +339,15 @@ require('lazy').setup({
     'folke/snacks.nvim',
     priority = 1000,
     lazy = false,
+    keys = {
+      {
+        '<leader>z',
+        function()
+          Snacks.zen.zoom()
+        end,
+        desc = 'Zen Zoom',
+      },
+    },
     opts = {
       animate = { enabled = true },
       scroll = {
@@ -590,12 +600,12 @@ require('lazy').setup({
       -- Visual mode: grep for selected text across project
       vim.keymap.set('v', '<leader>sg', function()
         -- Get the visually selected text
-        local visual_selection = vim.fn.getregion(vim.fn.getpos('v'), vim.fn.getpos('.'))
+        local visual_selection = vim.fn.getregion(vim.fn.getpos 'v', vim.fn.getpos '.')
         -- Use only the first line for multiline selections
         local search_term = visual_selection[1] or ''
 
         -- Open grep with the selected text, allowing editing before search
-        builtin.grep_string({ search = search_term })
+        builtin.grep_string { search = search_term }
       end, { desc = '[S]earch by [G]rep (selection)' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
@@ -628,12 +638,12 @@ require('lazy').setup({
       -- Visual mode: search for selected text in current buffer
       vim.keymap.set('v', '<leader>/', function()
         -- Get the visually selected text
-        local visual_selection = vim.fn.getregion(vim.fn.getpos('v'), vim.fn.getpos('.'))
+        local visual_selection = vim.fn.getregion(vim.fn.getpos 'v', vim.fn.getpos '.')
         -- Use only the first line for multiline selections
         local search_term = visual_selection[1] or ''
 
         -- Search in current buffer with the selected text
-        builtin.current_buffer_fuzzy_find({ default_text = search_term })
+        builtin.current_buffer_fuzzy_find { default_text = search_term }
       end, { desc = '[/] Search in current buffer (selection)' })
 
       -- It's also possible to pass additional configuration options.
@@ -829,6 +839,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
+        marksman = {},
         pyright = {},
         ruff = {
           -- Disable formatting since we use conform.nvim with ruff_format

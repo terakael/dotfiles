@@ -72,3 +72,13 @@ vim.api.nvim_create_autocmd('FileType', {
     vim.api.nvim_set_hl(0, '@function.builtin.gotmpl', { fg = colors.green, bold = true })
   end,
 })
+
+-- Enable line wrapping for markdown and text files
+vim.api.nvim_create_autocmd('FileType', {
+  desc = 'Enable line wrapping for document files',
+  group = vim.api.nvim_create_augroup('wrap-documents', { clear = true }),
+  pattern = { 'markdown', 'text' },
+  callback = function()
+    vim.opt_local.wrap = true
+  end,
+})
