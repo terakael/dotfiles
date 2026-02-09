@@ -4,6 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Context
 All questions and tasks in this project relate to the setup and configuration of Neovim. When answering questions, always reference the actual configuration files and settings present in this repository.
+Keep your answers token-efficient.
 
 ## Common Development Commands
 
