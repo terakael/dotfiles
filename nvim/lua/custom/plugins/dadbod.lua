@@ -25,5 +25,13 @@ return {
       -- Add your connection string here
       -- dev = 'postgresql://user:password@host:port/database',
     }
+
+    -- DBUI Rainbow configuration (see lua/custom/plugins/dbui-rainbow.lua)
+    -- Adds rainbow column colors and alternating row backgrounds to query results
+    -- Commands: :DBUIToggleRainbowStyle, :DBUISetRainbowStyle, :DBUIRainbowInfo
+    -- Buffer keymaps: <leader>dr (toggle), <leader>di (info), <leader>dR (refresh)
+    vim.g.dbui_rainbow_enabled = 1
+    vim.g.dbui_rainbow_style = 'grid' -- 'grid', 'columns', 'rows', 'off'
+    vim.g.dbui_rainbow_max_columns = 20 -- Increased from default 12
   end,
 }
