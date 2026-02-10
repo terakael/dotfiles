@@ -346,11 +346,20 @@ require('lazy').setup({
         },
       },
       indent = { enabled = true },
-      gitbrowse = { enabled = true },
       lazygit = {},
       input = { enabled = true },
       picker = { enabled = true },
-      terminal = { enabled = true },
+      -- Global styles for all Snacks windows
+      styles = {
+        lazygit = {
+          width = 0.98,
+          height = 0.98,
+        },
+        picker = {
+          width = 0.98,
+          height = 0.98,
+        },
+      },
     },
   },
 
@@ -557,6 +566,18 @@ require('lazy').setup({
           },
         },
         defaults = {
+          layout_config = {
+            horizontal = {
+              width = 0.98,
+              height = 0.98,
+              preview_width = 0.6,
+            },
+            vertical = {
+              width = 0.98,
+              height = 0.98,
+              preview_height = 0.5,
+            },
+          },
           file_ignore_patterns = {
             '^%.venv/',
             '/__pycache__/',
