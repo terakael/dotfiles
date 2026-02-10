@@ -29,7 +29,7 @@ function M.detect_columns(bufnr)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, math.min(10, vim.api.nvim_buf_line_count(bufnr)), false)
   local separator_line = nil
   local separator_line_num = nil
-  local header_line = nil
+  local header_line_num = nil
   
   -- Find the separator line (can be line 1 or 2)
   for i, line in ipairs(lines) do
@@ -39,11 +39,12 @@ function M.detect_columns(bufnr)
       separator_line_num = i
       
       -- Header is either before or after separator
-      if i > 1 and lines[i - 1]:match('^|') then
-        header_line = lines[i - 1]
+      if i > 1 then
+        -- SQLite format or MySQL with header above separator
+        header_line_num = i - 1
       elseif i < #lines and lines[i + 1]:match('^|') then
-        header_line = lines[i + 1]
-        separator_line_num = i -- Keep this as separator line number for data start calculation
+        -- MySQL format with header below separator (rare)
+        header_line_num = i + 1
       end
       break
     end
@@ -123,7 +124,8 @@ function M.detect_columns(bufnr)
   
   return {
     columns = columns,
-    header_line = separator_line_num,
+    header_line = header_line_num or separator_line_num,
+    separator_line = separator_line_num,
   }
 end
 
@@ -155,9 +157,17 @@ function M.setup_highlights()
     vim.api.nvim_set_hl(0, hl_even, { fg = base_colors[i], bg = bg_cursorline })
   end
   
-  -- Special highlight for headers and separators (no coloring)
-  vim.api.nvim_set_hl(0, 'DboutHeader', { link = 'Comment' })
-  vim.api.nvim_set_hl(0, 'DboutSeparator', { link = 'Comment' })
+  -- Create header highlight groups (bold + rainbow colors)
+  for i = 1, #base_colors do
+    local hl_header = string.format('DboutHeaderCol%d', i)
+    vim.api.nvim_set_hl(0, hl_header, { fg = base_colors[i], bold = true })
+  end
+  
+  -- Create separator highlight groups (rainbow colors, no bold)
+  for i = 1, #base_colors do
+    local hl_separator = string.format('DboutSeparatorCol%d', i)
+    vim.api.nvim_set_hl(0, hl_separator, { fg = base_colors[i] })
+  end
 end
 
 -- Apply rainbow syntax to a buffer
@@ -178,10 +188,12 @@ function M.apply_syntax(bufnr)
   
   local columns = detection.columns
   local header_line = detection.header_line
+  local separator_line = detection.separator_line
   
   -- Store in buffer variable for reference
   vim.b[bufnr].dbui_rainbow_columns = columns
   vim.b[bufnr].dbui_rainbow_header_line = header_line
+  vim.b[bufnr].dbui_rainbow_separator_line = separator_line
   
   -- Setup highlights if not already done
   M.setup_highlights()
@@ -194,24 +206,78 @@ function M.apply_syntax(bufnr)
   -- Apply syntax based on style
   if M.config.style == 'grid' then
     -- Use extmarks for grid mode (better control over row/column intersection)
-    M.apply_row_alternating_extmarks(bufnr, header_line, columns)
+    M.apply_row_alternating_extmarks(bufnr, separator_line, columns)
   elseif M.config.style == 'columns' then
-    M.apply_column_syntax(bufnr, columns, header_line)
+    M.apply_column_syntax(bufnr, columns, separator_line)
   elseif M.config.style == 'rows' then
-    M.apply_row_syntax(bufnr, header_line)
+    M.apply_row_syntax(bufnr, separator_line)
   end
   
-  -- Highlight headers and separators
-  vim.api.nvim_buf_call(bufnr, function()
-    pcall(vim.cmd, 'syntax match DboutSeparator /^+[-+]*+$/')
-    if header_line > 0 then
-      pcall(vim.cmd, string.format('syntax match DboutHeader /\\%%%dl.*/', header_line))
+  -- Apply rainbow colors to header columns
+  if header_line > 0 then
+    M.apply_header_colors(bufnr, header_line, columns)
+  end
+  
+  -- Apply rainbow colors to separator line
+  if separator_line > 0 then
+    M.apply_separator_colors(bufnr, separator_line, columns)
+  end
+end
+
+-- Apply rainbow colors to a specific line with column-based highlighting
+-- @param bufnr number: Buffer number
+-- @param line_num number: Line number (1-indexed)
+-- @param columns table: Column boundaries
+-- @param hl_group_prefix string: Prefix for highlight group names (e.g., 'DboutHeaderCol', 'DboutSeparatorCol')
+-- @param namespace string: Namespace for extmarks
+local function apply_line_colors(bufnr, line_num, columns, hl_group_prefix, namespace)
+  local base_colors = M.config.colors or colors_util.get_default_colors()
+  local ns_id = vim.api.nvim_create_namespace(namespace)
+  
+  -- Clear existing extmarks
+  vim.api.nvim_buf_clear_namespace(bufnr, ns_id, line_num - 1, line_num)
+  
+  -- Get the line content
+  local line_content = vim.api.nvim_buf_get_lines(bufnr, line_num - 1, line_num, false)[1]
+  if not line_content then return end
+  
+  -- Apply color to each column
+  for col_idx, col in ipairs(columns) do
+    local color_idx = ((col_idx - 1) % #base_colors) + 1
+    local start_col = col.start_col - 1  -- Convert to 0-indexed
+    local end_col = col.end_col
+    
+    if start_col < #line_content then
+      pcall(vim.api.nvim_buf_set_extmark, bufnr, ns_id, line_num - 1, start_col, {
+        end_col = math.min(end_col, #line_content),
+        hl_group = hl_group_prefix .. color_idx,
+        priority = 110,  -- Higher priority than data rows to ensure visibility
+      })
     end
-  end)
+  end
+end
+
+-- Apply rainbow colors to header columns
+-- @param bufnr number: Buffer number
+-- @param header_line number: Line number of the header (1-indexed)
+-- @param columns table: Column boundaries
+function M.apply_header_colors(bufnr, header_line, columns)
+  apply_line_colors(bufnr, header_line, columns, 'DboutHeaderCol', 'dbui_rainbow_header')
+end
+
+-- Apply rainbow colors to separator line
+-- @param bufnr number: Buffer number
+-- @param separator_line number: Line number of the separator (1-indexed)
+-- @param columns table: Column boundaries
+function M.apply_separator_colors(bufnr, separator_line, columns)
+  apply_line_colors(bufnr, separator_line, columns, 'DboutSeparatorCol', 'dbui_rainbow_separator')
 end
 
 -- Apply column-based rainbow syntax
-function M.apply_column_syntax(bufnr, columns, header_line)
+-- @param bufnr number: Buffer number
+-- @param columns table: Column boundaries
+-- @param separator_line number: Line number of separator (data starts after this)
+function M.apply_column_syntax(bufnr, columns, separator_line)
   local base_colors = M.config.colors or colors_util.get_default_colors()
   
   vim.api.nvim_buf_call(bufnr, function()
@@ -223,7 +289,7 @@ function M.apply_column_syntax(bufnr, columns, header_line)
       if start_col and end_col then
         -- Simple approach: just color the columns without row alternating for now
         -- We'll use extmarks for row alternating instead
-        local pattern = string.format('\\%%>%dl\\%%%dc.\\{-}\\%%%dc', header_line + 1, start_col, end_col)
+        local pattern = string.format('\\%%>%dl\\%%%dc.\\{-}\\%%%dc', separator_line, start_col, end_col)
         
         pcall(function()
           vim.cmd(string.format('syntax match DboutCol%dRow0 /%s/', color_idx, pattern))
@@ -234,7 +300,10 @@ function M.apply_column_syntax(bufnr, columns, header_line)
 end
 
 -- Apply row alternating with extmarks (more reliable than syntax)
-function M.apply_row_alternating_extmarks(bufnr, header_line, columns)
+-- @param bufnr number: Buffer number
+-- @param separator_line number: Line number of separator (data starts after this)
+-- @param columns table: Column boundaries
+function M.apply_row_alternating_extmarks(bufnr, separator_line, columns)
   -- Clear existing namespace
   local ns_id = vim.api.nvim_create_namespace('dbui_rainbow_rows')
   vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1)
@@ -270,7 +339,7 @@ function M.apply_row_alternating_extmarks(bufnr, header_line, columns)
   end
   
   if not data_start then
-    data_start = header_line + 3 -- Default fallback
+    data_start = separator_line + 1 -- Default fallback: data starts right after separator
   end
   
   local row_counter = 0 -- Track actual data rows
@@ -307,7 +376,9 @@ function M.apply_row_alternating_extmarks(bufnr, header_line, columns)
 end
 
 -- Apply row alternating syntax (for 'rows' or 'grid' style)
-function M.apply_row_syntax(bufnr, header_line)
+-- @param bufnr number: Buffer number
+-- @param separator_line number: Line number of separator (not currently used, kept for API compatibility)
+function M.apply_row_syntax(bufnr, separator_line)
   -- For grid mode, we use extmarks instead
   -- This function is now a no-op, replaced by apply_row_alternating_extmarks
 end
