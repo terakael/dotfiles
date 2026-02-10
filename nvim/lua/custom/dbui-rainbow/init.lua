@@ -33,14 +33,17 @@ function M.detect_columns(bufnr)
   
   -- Find the separator line (can be line 1 or 2)
   for i, line in ipairs(lines) do
-    -- Check for dash-based separator (SQLite format) or plus-based (MySQL format)
-    if line:match('^[-]+%s+[-]+') or line:match('^%+[-+]+%+$') then
+    -- Check for different separator formats:
+    -- 1. SQLite format: ---  ----  --- (dashes with spaces)
+    -- 2. MySQL format: +----+-----+----+ (starts and ends with +)
+    -- 3. PostgreSQL format:  ---------+-----------+-----+ (dashes with + in middle, may have leading space)
+    if line:match('^%s*[-]+%s+[-]+') or line:match('^%s*%+[-+]+%+$') or line:match('^%s*[-]+%+[-+]+') then
       separator_line = line
       separator_line_num = i
       
       -- Header is either before or after separator
       if i > 1 then
-        -- SQLite format or MySQL with header above separator
+        -- SQLite/PostgreSQL format or MySQL with header above separator
         header_line_num = i - 1
       elseif i < #lines and lines[i + 1]:match('^|') then
         -- MySQL format with header below separator (rare)
@@ -59,7 +62,7 @@ function M.detect_columns(bufnr)
   
   -- Check format type
   if separator_line:match('^%+[-+]+%+$') then
-    -- MySQL/Postgres format: +----+-----+----+
+    -- MySQL format: +----+-----+----+
     -- Split by + to find column boundaries
     local pos = 1
     for i = 2, #separator_line do -- Start at 2 to skip first +
@@ -72,6 +75,29 @@ function M.detect_columns(bufnr)
         })
         pos = i
       end
+    end
+  elseif separator_line:match('^%s*[-]+%+[-+]+') then
+    -- PostgreSQL format:  ---------+-----------+---------+ (may have leading space)
+    -- Split by + to find column boundaries (+ marks boundaries between columns)
+    local pos = 1
+    for i = 1, #separator_line do
+      local char = separator_line:sub(i, i)
+      if char == '+' then
+        -- Found column boundary
+        table.insert(columns, {
+          start_col = pos,
+          end_col = i - 1,
+        })
+        pos = i + 1
+      end
+    end
+    
+    -- Handle last column (after the last +)
+    if pos <= #separator_line then
+      table.insert(columns, {
+        start_col = pos,
+        end_col = #separator_line,
+      })
     end
   else
     -- SQLite format: ---  ----  ---
