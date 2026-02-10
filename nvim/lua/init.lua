@@ -141,7 +141,7 @@ end)
 -- Enable break indent
 vim.opt.breakindent = true
 vim.opt.autoindent = true
-vim.opt.smartindent = true
+vim.opt.linebreak = true
 
 -- Set default indentation (vim-sleuth will override based on file context)
 vim.opt.expandtab = true -- Use spaces instead of tabs
@@ -1041,16 +1041,6 @@ require('lazy').setup({
         pattern = '*',
         callback = function()
           pcall(vim.treesitter.start)
-        end,
-      })
-
-      -- Enable treesitter-based indentation for non-ruby files
-      vim.api.nvim_create_autocmd('FileType', {
-        pattern = '*',
-        callback = function()
-          if vim.bo.filetype ~= 'ruby' then
-            vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-          end
         end,
       })
 
