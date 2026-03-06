@@ -1,8 +1,8 @@
 -- Bitbucket PR Review plugin entry point
 local M = {}
-local pr = require('bitbucket_review.pr')
-local gutter = require('bitbucket_review.gutter')
-local ui = require('bitbucket_review.ui')
+local pr = require 'bitbucket_review.pr'
+local gutter = require 'bitbucket_review.gutter'
+local ui = require 'bitbucket_review.ui'
 
 local loaded = false
 local loading = false
@@ -12,10 +12,14 @@ local loading = false
 -- callback: optional function() called on success
 function M.load(force, callback)
   if loaded and not force then
-    if callback then callback() end
+    if callback then
+      callback()
+    end
     return
   end
-  if loading then return end
+  if loading then
+    return
+  end
   loading = true
 
   pr.detect(function(err, found_pr)
@@ -46,9 +50,65 @@ function M.load(force, callback)
           gutter.refresh(bufnr)
         end
       end
-      if callback then callback() end
+      if callback then
+        callback()
+      end
     end)
   end)
+end
+
+-- Jump to the next/previous commented line in the current file
+local function jump_comment(direction)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local path = pr.relative_path(bufnr)
+  if not path then
+    return
+  end
+
+  local by_line = pr.state.by_file_line[path]
+  if not by_line then
+    return
+  end
+
+  local commented_lines = {}
+  for line_num, threads in pairs(by_line) do
+    if #threads > 0 then
+      table.insert(commented_lines, line_num)
+    end
+  end
+  if #commented_lines == 0 then
+    return
+  end
+  table.sort(commented_lines)
+
+  local cursor = vim.api.nvim_win_get_cursor(0)[1]
+  local target
+
+  if direction == 'next' then
+    for _, ln in ipairs(commented_lines) do
+      if ln > cursor then
+        target = ln
+        break
+      end
+    end
+    if not target then
+      target = commented_lines[1]
+    end -- wrap
+  else
+    for i = #commented_lines, 1, -1 do
+      if commented_lines[i] < cursor then
+        target = commented_lines[i]
+        break
+      end
+    end
+    if not target then
+      target = commented_lines[#commented_lines]
+    end -- wrap
+  end
+
+  local row = math.min(target, vim.api.nvim_buf_line_count(0))
+  vim.api.nvim_win_set_cursor(0, { row, 0 })
+  vim.cmd 'normal! zz'
 end
 
 -- Main action: open comment thread / post new comment on current line
@@ -126,27 +186,27 @@ local function search_comments()
     return
   end
 
-  local pickers      = require('telescope.pickers')
-  local finders      = require('telescope.finders')
-  local conf         = require('telescope.config').values
-  local actions      = require('telescope.actions')
-  local action_state = require('telescope.actions.state')
-  local entry_display = require('telescope.pickers.entry_display')
+  local pickers = require 'telescope.pickers'
+  local finders = require 'telescope.finders'
+  local conf = require('telescope.config').values
+  local actions = require 'telescope.actions'
+  local action_state = require 'telescope.actions.state'
+  local entry_display = require 'telescope.pickers.entry_display'
 
   local git_root = pr.git_root() or ''
 
   -- Collect every comment (top-level + replies) as a flat list
   local entries = {}
   local function collect(comment, path, line, depth)
-    local author  = (comment.author and comment.author.displayName) or 'Unknown'
+    local author = (comment.author and comment.author.displayName) or 'Unknown'
     local preview = (comment.text or ''):gsub('%s+', ' ')
     table.insert(entries, {
-      path     = path,
+      path = path,
       abs_path = git_root .. '/' .. path,
-      line     = line,
-      author   = author,
-      preview  = preview,
-      depth    = depth,
+      line = line,
+      author = author,
+      preview = preview,
+      depth = depth,
     })
     for _, reply in ipairs(comment.comments or {}) do
       collect(reply, path, line, depth + 1)
@@ -167,65 +227,80 @@ local function search_comments()
   end
 
   table.sort(entries, function(a, b)
-    if a.path ~= b.path then return a.path < b.path end
-    if a.line ~= b.line then return a.line < b.line end
+    if a.path ~= b.path then
+      return a.path < b.path
+    end
+    if a.line ~= b.line then
+      return a.line < b.line
+    end
     return a.depth < b.depth
   end)
 
   -- Column-aligned display: file:line │ author │ preview
-  local displayer = entry_display.create({
+  local displayer = entry_display.create {
     separator = '  ',
     items = {
-      { width = 6 },   -- line number
-      { width = 30 },  -- author (truncated)
+      { width = 6 }, -- line number
+      { width = 30 }, -- author (truncated)
       { remaining = true }, -- comment preview
     },
-  })
+  }
 
   local function make_display(entry)
     local v = entry.value
     local author = #v.author > 28 and v.author:sub(1, 27) .. '…' or v.author
-    return displayer({
+    return displayer {
       { tostring(v.line), 'TelescopeResultsNumber' },
-      { author,           'BbReviewAuthor' },
-      { v.preview,        'TelescopeResultsComment' },
-    })
+      { author, 'BbReviewAuthor' },
+      { v.preview, 'TelescopeResultsComment' },
+    }
   end
 
-  pickers.new({}, {
-    prompt_title = string.format('PR #%d Comments', pr.state.pr.id),
-    finder = finders.new_table({
-      results = entries,
-      entry_maker = function(e)
-        return {
-          value    = e,
-          display  = make_display,
-          -- Keep ordinal short: long strings cause fzy to match almost anything
-        ordinal  = vim.fn.fnamemodify(e.path, ':t') .. ' ' .. e.author .. ' ' .. e.preview:sub(1, 120),
-          filename = e.abs_path,
-          lnum     = e.line,
-        }
+  pickers
+    .new({}, {
+      prompt_title = string.format('PR #%d Comments', pr.state.pr.id),
+      finder = finders.new_table {
+        results = entries,
+        entry_maker = function(e)
+          return {
+            value = e,
+            display = make_display,
+            -- Keep ordinal short: long strings cause fzy to match almost anything
+            ordinal = vim.fn.fnamemodify(e.path, ':t') .. ' ' .. e.author .. ' ' .. e.preview:sub(1, 120),
+            filename = e.abs_path,
+            lnum = e.line,
+          }
+        end,
+      },
+      sorter = require('telescope.sorters').get_fzy_sorter(),
+      previewer = conf.grep_previewer {},
+      attach_mappings = function(prompt_bufnr)
+        actions.select_default:replace(function()
+          actions.close(prompt_bufnr)
+          local sel = action_state.get_selected_entry()
+          if not sel then
+            return
+          end
+          vim.cmd('edit ' .. vim.fn.fnameescape(sel.value.abs_path))
+          local target = math.min(sel.value.line, vim.api.nvim_buf_line_count(0))
+          vim.api.nvim_win_set_cursor(0, { target, 0 })
+          vim.cmd 'normal! zz'
+        end)
+        return true
       end,
-    }),
-    sorter    = require('telescope.sorters').get_fzy_sorter(),
-    previewer = conf.grep_previewer({}),
-    attach_mappings = function(prompt_bufnr)
-      actions.select_default:replace(function()
-        actions.close(prompt_bufnr)
-        local sel = action_state.get_selected_entry()
-        if not sel then return end
-        vim.cmd('edit ' .. vim.fn.fnameescape(sel.value.abs_path))
-        local target = math.min(sel.value.line, vim.api.nvim_buf_line_count(0))
-        vim.api.nvim_win_set_cursor(0, { target, 0 })
-        vim.cmd('normal! zz')
-      end)
-      return true
-    end,
-  }):find()
+    })
+    :find()
 end
 
 function M.setup()
   vim.keymap.set('n', '<leader>cc', open_comment, { desc = 'PR [C]omment on line' })
+
+  vim.keymap.set('n', ']p', function()
+    jump_comment 'next'
+  end, { desc = 'Next PR comment' })
+  vim.keymap.set('n', '[p', function()
+    jump_comment 'prev'
+  end, { desc = 'Previous PR comment' })
 
   vim.keymap.set('n', '<leader>cs', search_comments, { desc = 'PR [C]omments [S]earch' })
 
@@ -250,9 +325,13 @@ function M.setup()
       vim.notify('[BbReview] No PR bound', vim.log.levels.WARN)
       return
     end
-    local api = require('bitbucket_review.api')
-    local url = ('%s/rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/activities?limit=10')
-      :format(pr.state.base_url, pr.state.project, pr.state.repo, pr.state.pr.id)
+    local api = require 'bitbucket_review.api'
+    local url = ('%s/rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/activities?limit=10'):format(
+      pr.state.base_url,
+      pr.state.project,
+      pr.state.repo,
+      pr.state.pr.id
+    )
     api.get(url, function(err, data)
       if err then
         vim.notify('[BbReview] Debug fetch error: ' .. err, vim.log.levels.ERROR)
