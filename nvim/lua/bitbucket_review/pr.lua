@@ -48,18 +48,152 @@ local function flatten(comment, depth, out)
   return out
 end
 
--- Build by_file_line index from a flat list of top-level comment objects
+-- Build by_file_line index from a flat list of top-level comment objects.
+-- Uses c._mapped_line when present (set by apply_line_maps), else anchor.line.
 local function index(comments)
   local idx = {}
   for _, c in ipairs(comments) do
     local a = c.anchor
-    if a and a.line and a.path then
+    local line = c._mapped_line or (a and a.line)
+    if a and line and a.path then
       idx[a.path] = idx[a.path] or {}
-      idx[a.path][a.line] = idx[a.path][a.line] or {}
-      table.insert(idx[a.path][a.line], c)
+      idx[a.path][line] = idx[a.path][line] or {}
+      table.insert(idx[a.path][line], c)
     end
   end
   return idx
+end
+
+-- Parse a unified diff into a line-mapper function: old_line -> new_line | nil (deleted).
+-- Lines outside all diff hunks are mapped via the cumulative delta at that point.
+local function make_line_mapper(diff_text)
+  if not diff_text or diff_text == '' then
+    return function(l) return l end
+  end
+
+  local explicit = {}   -- [old_line] = new_line, or false for deleted lines
+  -- Breakpoints: after processing each hunk we record the running delta for
+  -- lines that fall between hunks (not explicitly mapped).
+  -- Each entry: { old_end = N, delta = D } meaning "for old_line > N (until
+  -- the next entry's old_end), new_line = old_line + D".
+  local breakpoints = {}
+  local pre_hunk_delta = nil  -- delta valid before the first hunk
+
+  local lines = vim.split(diff_text, '\n', { plain = true })
+  local i = 1
+  while i <= #lines do
+    local os, oc, ns = lines[i]:match('^@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@')
+    if os then
+      local old_pos = tonumber(os)
+      local new_pos = tonumber(ns)
+      -- Delta for lines sitting before this hunk (unchanged, outside context window)
+      if pre_hunk_delta == nil then
+        pre_hunk_delta = new_pos - old_pos
+      end
+      i = i + 1
+      while i <= #lines do
+        local ch = lines[i]:sub(1, 1)
+        if ch == ' ' then
+          explicit[old_pos] = new_pos
+          old_pos = old_pos + 1
+          new_pos = new_pos + 1
+        elseif ch == '-' then
+          explicit[old_pos] = false
+          old_pos = old_pos + 1
+        elseif ch == '+' then
+          new_pos = new_pos + 1
+        elseif ch == '@' then
+          break  -- start of next hunk; don't advance i
+        elseif ch == 'd' or ch == 'i' then
+          break  -- next diff --git header
+        end
+        -- '\' (no newline at end of file) and empty lines: skip
+        if ch ~= '@' and ch ~= 'd' and ch ~= 'i' then i = i + 1 end
+      end
+      -- After this hunk: delta = new_pos - old_pos (both point past last line)
+      table.insert(breakpoints, { old_end = old_pos - 1, delta = new_pos - old_pos })
+    else
+      i = i + 1
+    end
+  end
+
+  if pre_hunk_delta == nil then
+    return function(l) return l end  -- no hunks parsed
+  end
+
+  return function(old_line)
+    local v = explicit[old_line]
+    if v == false then return nil end   -- line was deleted
+    if v then return v end              -- context line explicitly mapped in hunk
+
+    -- Outside all hunks: apply the running delta at this position
+    -- Scan breakpoints in order; the last one whose old_end < old_line applies.
+    local delta = pre_hunk_delta
+    for _, bp in ipairs(breakpoints) do
+      if bp.old_end < old_line then
+        delta = bp.delta
+      else
+        break
+      end
+    end
+    return old_line + delta
+  end
+end
+
+-- For each unique (path, toHash) pair among inline comments, run git diff
+-- toHash..HEAD to build a line mapper. Calls callback() when all are ready,
+-- with c._mapped_line set on each comment.
+local function apply_line_maps(inline, callback)
+  -- Collect unique pairs
+  local needed = {}
+  for _, c in ipairs(inline) do
+    local to_hash = c.anchor and c.anchor.toHash
+    local path    = c.anchor and c.anchor.path
+    if to_hash and path then
+      local key = path .. '\0' .. to_hash
+      needed[key] = { path = path, to_hash = to_hash }
+    end
+  end
+
+  local mappers  = {}
+  local total    = 0
+  local finished = 0
+  for _ in pairs(needed) do total = total + 1 end
+
+  if total == 0 then
+    callback()
+    return
+  end
+
+  local function on_done()
+    finished = finished + 1
+    if finished < total then return end
+    -- Apply mappers to set _mapped_line on each comment
+    for _, c in ipairs(inline) do
+      local to_hash = c.anchor and c.anchor.toHash
+      local path    = c.anchor and c.anchor.path
+      if to_hash and path then
+        local key    = path .. '\0' .. to_hash
+        local mapper = mappers[key] or function(l) return l end
+        c._mapped_line = mapper(c.anchor.line)
+      end
+    end
+    callback()
+  end
+
+  for key, info in pairs(needed) do
+    local k = key
+    vim.system(
+      { 'git', 'diff', info.to_hash .. '..HEAD', '--', info.path },
+      { text = true },
+      function(r)
+        vim.schedule(function()
+          mappers[k] = make_line_mapper(r.code == 0 and r.stdout or '')
+          on_done()
+        end)
+      end
+    )
+  end
 end
 
 -- Returns git root for cwd (sync)
@@ -139,8 +273,10 @@ function M.fetch_comments(callback)
         end
       end
     end
-    M.state.by_file_line = index(inline)
-    callback(nil, inline)
+    apply_line_maps(inline, function()
+      M.state.by_file_line = index(inline)
+      callback(nil, inline)
+    end)
   end)
 end
 
