@@ -292,6 +292,125 @@ local function search_comments()
     :find()
 end
 
+-- Telescope picker: all files changed in the PR, with inline diff preview
+local function browse_pr_files()
+  if not pr.state.pr then
+    vim.notify('[BbReview] No PR bound.', vim.log.levels.INFO)
+    return
+  end
+  if not pcall(require, 'telescope') then
+    vim.notify('[BbReview] Telescope not available.', vim.log.levels.WARN)
+    return
+  end
+
+  local pickers       = require('telescope.pickers')
+  local finders       = require('telescope.finders')
+  local conf          = require('telescope.config').values
+  local actions       = require('telescope.actions')
+  local action_state  = require('telescope.actions.state')
+  local entry_display = require('telescope.pickers.entry_display')
+  local previewers    = require('telescope.previewers')
+
+  local git_root = pr.git_root() or ''
+
+  -- Collect changed files from git
+  local r = vim.system({ 'git', 'diff', 'development...HEAD', '--name-status' }, { text = true }):wait()
+  if r.code ~= 0 or not r.stdout or vim.trim(r.stdout) == '' then
+    vim.notify('[BbReview] No changed files found.', vim.log.levels.INFO)
+    return
+  end
+
+  local entries = {}
+  for _, line in ipairs(vim.split(r.stdout, '\n', { plain = true })) do
+    if line ~= '' then
+      local status, path = line:match('^(%a+)\t(.+)$')
+      if status and path then
+        -- Renames: "R100\told\tnew" — take the new path
+        if status:sub(1, 1) == 'R' then
+          local _, new_p = path:match('^(.+)\t(.+)$')
+          if new_p then path = new_p end
+          status = 'R'
+        else
+          status = status:sub(1, 1)
+        end
+        local by_line = pr.state.by_file_line[path] or {}
+        local n_comments = 0
+        for _, threads in pairs(by_line) do n_comments = n_comments + #threads end
+        table.insert(entries, {
+          status    = status,
+          path      = path,
+          abs_path  = git_root .. '/' .. path,
+          n_comments = n_comments,
+        })
+      end
+    end
+  end
+
+  if #entries == 0 then
+    vim.notify('[BbReview] No changed files found.', vim.log.levels.INFO)
+    return
+  end
+
+  -- Files with comments first, then alphabetical
+  table.sort(entries, function(a, b)
+    if a.n_comments ~= b.n_comments then return a.n_comments > b.n_comments end
+    return a.path < b.path
+  end)
+
+  local status_hl = { M = 'DiagnosticWarn', A = 'DiagnosticOk', D = 'DiagnosticError', R = 'DiagnosticInfo' }
+
+  local displayer = entry_display.create({
+    separator = '  ',
+    items = { { width = 1 }, { width = 5 }, { remaining = true } },
+  })
+
+  local function make_display(entry)
+    local v   = entry.value
+    local badge = v.n_comments > 0 and ('💬' .. v.n_comments) or ''
+    return displayer({
+      { v.status, status_hl[v.status] or 'Normal' },
+      { badge,    'BbReviewAuthor' },
+      { v.path,   'TelescopeResultsIdentifier' },
+    })
+  end
+
+  -- Terminal diff previewer — pipes through delta for syntax-highlighted diffs
+  local diff_prev = previewers.new_termopen_previewer({
+    title = 'PR Diff',
+    get_command = function(entry)
+      return { 'bash', '-c', string.format(
+        'git diff development...HEAD -- %s | delta',
+        vim.fn.shellescape(entry.value.path)
+      )}
+    end,
+  })
+
+  pickers.new({}, {
+    prompt_title = string.format('PR #%d Files', pr.state.pr.id),
+    finder = finders.new_table({
+      results = entries,
+      entry_maker = function(e)
+        return {
+          value    = e,
+          display  = make_display,
+          ordinal  = e.status .. ' ' .. e.path,
+          filename = e.abs_path,
+        }
+      end,
+    }),
+    sorter    = conf.generic_sorter({}),
+    previewer = diff_prev,
+    attach_mappings = function(prompt_bufnr)
+      actions.select_default:replace(function()
+        actions.close(prompt_bufnr)
+        local sel = action_state.get_selected_entry()
+        if sel then vim.cmd('edit ' .. vim.fn.fnameescape(sel.value.abs_path)) end
+      end)
+      return true
+    end,
+  }):find()
+end
+
 function M.setup()
   vim.keymap.set('n', '<leader>cc', open_comment, { desc = 'PR [C]omment on line' })
 
@@ -302,7 +421,8 @@ function M.setup()
     jump_comment 'prev'
   end, { desc = 'Previous PR comment' })
 
-  vim.keymap.set('n', '<leader>cs', search_comments, { desc = 'PR [C]omments [S]earch' })
+  vim.keymap.set('n', '<leader>cs', search_comments,  { desc = 'PR [C]omments [S]earch' })
+  vim.keymap.set('n', '<leader>cf', browse_pr_files,  { desc = 'PR [C]hanged [F]iles' })
 
   vim.keymap.set('n', '<leader>cr', function()
     loaded = false
