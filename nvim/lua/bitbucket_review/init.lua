@@ -113,8 +113,121 @@ local function open_comment()
   end
 end
 
+-- Telescope picker over all inline PR comments
+local function search_comments()
+  if not pr.state.pr then
+    vim.notify('[BbReview] No PR bound.', vim.log.levels.INFO)
+    return
+  end
+
+  local ok_tel = pcall(require, 'telescope')
+  if not ok_tel then
+    vim.notify('[BbReview] Telescope not available.', vim.log.levels.WARN)
+    return
+  end
+
+  local pickers      = require('telescope.pickers')
+  local finders      = require('telescope.finders')
+  local conf         = require('telescope.config').values
+  local actions      = require('telescope.actions')
+  local action_state = require('telescope.actions.state')
+  local entry_display = require('telescope.pickers.entry_display')
+
+  local git_root = pr.git_root() or ''
+
+  -- Collect every comment (top-level + replies) as a flat list
+  local entries = {}
+  local function collect(comment, path, line, depth)
+    local author  = (comment.author and comment.author.displayName) or 'Unknown'
+    local preview = (comment.text or ''):gsub('%s+', ' ')
+    table.insert(entries, {
+      path     = path,
+      abs_path = git_root .. '/' .. path,
+      line     = line,
+      author   = author,
+      preview  = preview,
+      depth    = depth,
+    })
+    for _, reply in ipairs(comment.comments or {}) do
+      collect(reply, path, line, depth + 1)
+    end
+  end
+
+  for path, by_line in pairs(pr.state.by_file_line) do
+    for line_num, comments in pairs(by_line) do
+      for _, comment in ipairs(comments) do
+        collect(comment, path, line_num, 0)
+      end
+    end
+  end
+
+  if #entries == 0 then
+    vim.notify('[BbReview] No inline comments found.', vim.log.levels.INFO)
+    return
+  end
+
+  table.sort(entries, function(a, b)
+    if a.path ~= b.path then return a.path < b.path end
+    if a.line ~= b.line then return a.line < b.line end
+    return a.depth < b.depth
+  end)
+
+  -- Column-aligned display: file:line │ author │ preview
+  local displayer = entry_display.create({
+    separator = '  ',
+    items = {
+      { width = 6 },   -- line number
+      { width = 30 },  -- author (truncated)
+      { remaining = true }, -- comment preview
+    },
+  })
+
+  local function make_display(entry)
+    local v = entry.value
+    local author = #v.author > 28 and v.author:sub(1, 27) .. '…' or v.author
+    return displayer({
+      { tostring(v.line), 'TelescopeResultsNumber' },
+      { author,           'BbReviewAuthor' },
+      { v.preview,        'TelescopeResultsComment' },
+    })
+  end
+
+  pickers.new({}, {
+    prompt_title = string.format('PR #%d Comments', pr.state.pr.id),
+    finder = finders.new_table({
+      results = entries,
+      entry_maker = function(e)
+        return {
+          value    = e,
+          display  = make_display,
+          -- Keep ordinal short: long strings cause fzy to match almost anything
+        ordinal  = vim.fn.fnamemodify(e.path, ':t') .. ' ' .. e.author .. ' ' .. e.preview:sub(1, 120),
+          filename = e.abs_path,
+          lnum     = e.line,
+        }
+      end,
+    }),
+    sorter    = require('telescope.sorters').get_fzy_sorter(),
+    previewer = conf.grep_previewer({}),
+    attach_mappings = function(prompt_bufnr)
+      actions.select_default:replace(function()
+        actions.close(prompt_bufnr)
+        local sel = action_state.get_selected_entry()
+        if not sel then return end
+        vim.cmd('edit ' .. vim.fn.fnameescape(sel.value.abs_path))
+        local target = math.min(sel.value.line, vim.api.nvim_buf_line_count(0))
+        vim.api.nvim_win_set_cursor(0, { target, 0 })
+        vim.cmd('normal! zz')
+      end)
+      return true
+    end,
+  }):find()
+end
+
 function M.setup()
   vim.keymap.set('n', '<leader>cc', open_comment, { desc = 'PR [C]omment on line' })
+
+  vim.keymap.set('n', '<leader>cs', search_comments, { desc = 'PR [C]omments [S]earch' })
 
   vim.keymap.set('n', '<leader>cr', function()
     loaded = false

@@ -18,15 +18,18 @@ function M.refresh(bufnr)
   local by_line = pr.state.by_file_line[path]
   if not by_line then return end
 
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
   for line_num, threads in pairs(by_line) do
     if #threads > 0 then
       -- Bitbucket lines are 1-indexed; nvim extmarks are 0-indexed
       local row = line_num - 1
-      vim.api.nvim_buf_set_extmark(bufnr, ns, row, 0, {
-        sign_text = '💬',
-        sign_hl_group = 'DiagnosticInfo',
-        priority = 20,
-      })
+      if row < line_count then
+        vim.api.nvim_buf_set_extmark(bufnr, ns, row, 0, {
+          sign_text = '💬',
+          sign_hl_group = 'DiagnosticInfo',
+          priority = 20,
+        })
+      end
     end
   end
 end

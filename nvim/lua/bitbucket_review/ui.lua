@@ -1,6 +1,65 @@
 -- UI components using Snacks.win
 local M = {}
 
+local hl_ns = vim.api.nvim_create_namespace('bb_review_ui')
+
+-- Highlight groups — defined with default=true so a colorscheme can override them
+local function setup_highlights()
+  vim.api.nvim_set_hl(0, 'BbReviewHeader', { default = true, link = 'DiagnosticInfo' })
+  vim.api.nvim_set_hl(0, 'BbReviewHint',   { default = true, link = 'Comment' })
+  vim.api.nvim_set_hl(0, 'BbReviewSep',    { default = true, link = 'Comment' })
+  vim.api.nvim_set_hl(0, 'BbReviewAuthor', { default = true, link = 'Title' })
+  vim.api.nvim_set_hl(0, 'BbReviewTime',   { default = true, link = 'Comment' })
+end
+setup_highlights()
+
+-- ─ is a 3-byte UTF-8 sequence; check the raw bytes for separator detection
+local SEP_CHAR = '─'
+
+-- Apply syntax highlights to the rendered thread buffer
+local function apply_highlights(buf, lines)
+  vim.api.nvim_buf_clear_namespace(buf, hl_ns, 0, -1)
+  for i, line in ipairs(lines) do
+    local row = i - 1 -- extmarks are 0-indexed
+    local trimmed = vim.trim(line)
+
+    if trimmed:sub(1, #SEP_CHAR) == SEP_CHAR then
+      -- Separator line
+      vim.api.nvim_buf_set_extmark(buf, hl_ns, row, 0, {
+        end_row = row, end_col = #line, hl_group = 'BbReviewSep',
+      })
+    elseif line:match('^  Thread %d') then
+      -- "Thread N / N" in header colour, navigation hints in muted hint colour
+      local hint_byte = line:find('%s+<', 1)
+      if hint_byte then
+        vim.api.nvim_buf_set_extmark(buf, hl_ns, row, 0, {
+          end_row = row, end_col = hint_byte - 1, hl_group = 'BbReviewHeader',
+        })
+        vim.api.nvim_buf_set_extmark(buf, hl_ns, row, hint_byte - 1, {
+          end_row = row, end_col = #line, hl_group = 'BbReviewHint',
+        })
+      else
+        vim.api.nvim_buf_set_extmark(buf, hl_ns, row, 0, {
+          end_row = row, end_col = #line, hl_group = 'BbReviewHeader',
+        })
+      end
+    else
+      -- Author + timestamp line: ends with YYYY-MM-DD HH:MM
+      local ts_start = line:find('%d%d%d%d%-%d%d%-%d%d %d%d:%d%d')
+      if ts_start and ts_start > 1 then
+        -- Author name (before the two spaces + timestamp)
+        vim.api.nvim_buf_set_extmark(buf, hl_ns, row, 0, {
+          end_row = row, end_col = ts_start - 3, hl_group = 'BbReviewAuthor',
+        })
+        -- Timestamp
+        vim.api.nvim_buf_set_extmark(buf, hl_ns, row, ts_start - 1, {
+          end_row = row, end_col = #line, hl_group = 'BbReviewTime',
+        })
+      end
+    end
+  end
+end
+
 -- Format a single comment node into display lines
 local function fmt_comment(c)
   local indent = string.rep('  ', c._depth or 0)
@@ -59,6 +118,7 @@ function M.open_thread(threads, on_reply)
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, content)
     line_to_comment = mapping
     vim.bo[buf].modifiable = false
+    apply_highlights(buf, content)
   end
   set_content()
 
