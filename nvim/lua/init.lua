@@ -118,6 +118,34 @@ vim.g.python3_host_prog = get_python_path(vim.fn.getcwd())
 -- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
 
+-- Source .nvim.lua by walking up from each opened buffer's directory.
+-- Uses vim.secure.read() for the same trust-prompt security as exrc,
+-- but works regardless of what directory Neovim was started from.
+local sourced_nvim_configs = {}
+vim.api.nvim_create_autocmd('BufRead', {
+  callback = function()
+    local dir = vim.fn.expand '%:p:h'
+    while true do
+      local candidate = dir .. '/.nvim.lua'
+      if vim.fn.filereadable(candidate) == 1 then
+        if not sourced_nvim_configs[candidate] then
+          local content = vim.secure.read(candidate)
+          if content then
+            load(content, '@' .. candidate)()
+            sourced_nvim_configs[candidate] = true
+          end
+        end
+        break
+      end
+      local parent = vim.fn.fnamemodify(dir, ':h')
+      if parent == dir then
+        break
+      end
+      dir = parent
+    end
+  end,
+})
+
 -- Make line numbers default
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
