@@ -412,6 +412,11 @@ local function browse_pr_files()
 end
 
 function M.setup()
+  local remote = vim.fn.system('git remote get-url origin 2>/dev/null'):gsub('%s+$', '')
+  if not remote:find('git.rakuten-it.com', 1, true) then
+    return
+  end
+
   vim.keymap.set('n', '<leader>cc', open_comment, { desc = 'PR [C]omment on line' })
 
   vim.keymap.set('n', ']p', function()
