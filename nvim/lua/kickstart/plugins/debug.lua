@@ -146,6 +146,7 @@ return {
         -- Update this to ensure that you have the debuggers for the langs you want
         'delve',
         'debugpy',
+        'codelldb',
       },
     }
 
@@ -224,6 +225,16 @@ return {
         })
       end
     end
+
+    -- Rust / C / C++ configuration via codelldb
+    dap.adapters.codelldb = {
+      type = 'server',
+      port = '${port}',
+      executable = {
+        command = vim.fn.stdpath 'data' .. '/mason/bin/codelldb',
+        args = { '--port', '${port}' },
+      },
+    }
 
     dap.configurations.python = {
       {
