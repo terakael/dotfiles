@@ -20,6 +20,14 @@ return {
         map('<leader>Rd', function()
           vim.cmd.RustLsp 'debuggables'
         end, 'Debuggables')
+        map('<F5>', function()
+          local dap = require 'dap'
+          if dap.session() then
+            dap.continue()
+          else
+            vim.cmd.RustLsp 'debuggables'
+          end
+        end, 'Debug')
         map('<leader>Rr', function()
           vim.cmd.RustLsp 'runnables'
         end, 'Runnables')
@@ -29,6 +37,11 @@ return {
         map('<leader>Rc', function()
           vim.cmd.RustLsp 'openCargo'
         end, 'Open Cargo.toml')
+        map('<leader>cc', function()
+          vim.cmd 'compiler cargo'
+          vim.cmd 'silent make! check'
+          vim.cmd 'copen'
+        end, 'Cargo Check')
       end,
     },
     dap = {
