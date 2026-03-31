@@ -257,6 +257,17 @@ vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' }
 vim.keymap.set({ 'n', 'x' }, 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 vim.keymap.set({ 'n', 'x' }, 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 
+-- Open Jira ticket under cursor
+vim.keymap.set('n', 'gj', function()
+  local word = vim.fn.expand '<cWORD>'
+  local ticket = word:match '[A-Z]+-[0-9]+'
+  if ticket then
+    vim.ui.open('https://jira.rakuten-it.com/jira/browse/' .. ticket)
+  else
+    vim.notify('No Jira ticket found under cursor', vim.log.levels.WARN)
+  end
+end, { desc = 'Open [J]ira ticket under cursor' })
+
 -- TIP: Disable arrow keys in normal mode
 -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
 -- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
