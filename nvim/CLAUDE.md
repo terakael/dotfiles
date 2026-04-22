@@ -31,9 +31,7 @@ This is a **kickstart.nvim** configuration - a starting point for Neovim configu
 - Modular with optional plugin files in `lua/kickstart/plugins/`
 
 ### Key Files
-- `init.lua` - Main entry point, detects VSCode and loads appropriate config
-- `lua/init.lua` - Core Neovim configuration with plugins, LSP, keymaps
-- `lua/init_vscode.lua` - VSCode-specific keymaps and configuration
+- `init.lua` - Main entry point with all core configuration (plugins, LSP, keymaps)
 - `lua/kickstart/plugins/` - Optional plugin configurations (debug, lint, gitsigns, etc.)
 - `lua/custom/plugins/` - User's custom plugin directory
 
