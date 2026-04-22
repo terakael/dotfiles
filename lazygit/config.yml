@@ -39,3 +39,10 @@ customCommands:
     description: 'Three-dot diff: checked out...selected worktree'
     command: 'git diff --stat -p --color=always {{.SelectedWorktree.Name}}...{{.CheckedOutBranch.Branch}}'
     output: popup
+
+  # Show gitignored files
+  - key: '.'
+    context: 'files'
+    description: 'Show gitignored files'
+    command: "git ls-files --others --ignored --exclude-standard --directory --no-empty-directory | grep -E '^[^/]+/?$'"
+    output: popup
