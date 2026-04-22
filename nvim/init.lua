@@ -1135,6 +1135,38 @@ require('lazy').setup({
       'nvim-treesitter/nvim-treesitter-textobjects',
     },
     config = function()
+      -- nvim-treesitter's markdown injection uses #set-lang-from-info-string! which
+      -- passes nil nodes to get_range in nvim 0.12, crashing the decoration provider.
+      -- Override with the bundled nvim query before any markdown buffer is opened.
+      -- The LanguageTree caches _injection_query at creation time, so this must run early.
+      vim.treesitter.query.set('markdown', 'injections', [[
+(fenced_code_block
+  (info_string
+    (language) @injection.language)
+  (code_fence_content) @injection.content)
+
+((html_block) @injection.content
+  (#set! injection.language "html")
+  (#set! injection.combined)
+  (#set! injection.include-children))
+
+((minus_metadata) @injection.content
+  (#set! injection.language "yaml")
+  (#offset! @injection.content 1 0 -1 0)
+  (#set! injection.include-children))
+
+((plus_metadata) @injection.content
+  (#set! injection.language "toml")
+  (#offset! @injection.content 1 0 -1 0)
+  (#set! injection.include-children))
+
+([
+  (inline)
+  (pipe_table_cell)
+] @injection.content
+  (#set! injection.language "markdown_inline"))
+      ]])
+
       -- Enable treesitter highlighting for all filetypes
       vim.api.nvim_create_autocmd('FileType', {
         pattern = '*',
