@@ -9,10 +9,10 @@ vim.api.nvim_create_autocmd({ 'VimEnter', 'DirChanged' }, {
 
     -- Check if .venv exists and pyrightconfig.json doesn't
     if vim.fn.isdirectory(venv_path) == 1 and vim.fn.filereadable(pyright_config) == 0 then
-      local config_content = vim.json.encode({
+      local config_content = vim.json.encode {
         venvPath = '.',
         venv = '.venv',
-      })
+      }
       local file = io.open(pyright_config, 'w')
       if file then
         file:write(config_content)
@@ -28,7 +28,7 @@ vim.api.nvim_create_autocmd({ 'FocusGained', 'TermClose', 'TermLeave', 'CursorHo
   group = vim.api.nvim_create_augroup('auto-reload', { clear = true }),
   callback = function()
     if vim.o.buftype ~= 'nofile' then
-      vim.cmd('checktime')
+      vim.cmd 'checktime'
     end
   end,
 })

@@ -6,7 +6,7 @@ return {
   event = { 'BufReadPost', 'BufNewFile' },
   config = function()
     -- Setup rainbow delimiters with global strategy for all languages
-    require('rainbow-delimiters.setup').setup({
+    require('rainbow-delimiters.setup').setup {
       strategy = {
         [''] = require('rainbow-delimiters').strategy['global'],
       },
@@ -22,6 +22,6 @@ return {
         'RainbowDelimiterViolet',
         'RainbowDelimiterCyan',
       },
-    })
+    }
   end,
 }

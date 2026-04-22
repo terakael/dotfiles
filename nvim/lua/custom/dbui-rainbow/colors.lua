@@ -19,11 +19,7 @@ end
 -- @param rgb table: {r, g, b} with values 0-255
 -- @return string: Color in hex format (e.g., "#89ddff")
 function M.rgb_to_hex(rgb)
-  return string.format('#%02x%02x%02x', 
-    math.floor(rgb.r), 
-    math.floor(rgb.g), 
-    math.floor(rgb.b)
-  )
+  return string.format('#%02x%02x%02x', math.floor(rgb.r), math.floor(rgb.g), math.floor(rgb.b))
 end
 
 -- Convert RGB to HSV color space
@@ -73,7 +69,7 @@ end
 -- @return table: {r, g, b} with values 0-255
 function M.hsv_to_rgb(hsv)
   local h, s, v = hsv.h, hsv.s, hsv.v
-  
+
   if s <= 0 then
     return { r = v * 255, g = v * 255, b = v * 255 }
   end
@@ -118,13 +114,13 @@ end
 -- @return string: Dimmed color in hex format
 function M.dim_color(hex, factor)
   factor = factor or 0.75
-  
+
   local rgb = M.hex_to_rgb(hex)
   local hsv = M.rgb_to_hsv(rgb)
-  
+
   -- Reduce the value (brightness) component
   hsv.v = hsv.v * factor
-  
+
   local new_rgb = M.hsv_to_rgb(hsv)
   return M.rgb_to_hex(new_rgb)
 end

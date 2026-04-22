@@ -19,7 +19,7 @@ end
 vim.opt_local.syntax = 'on'
 
 -- Apply rainbow syntax (main logic is in the plugin config autocmds)
-local rainbow = require('custom.dbui-rainbow')
+local rainbow = require 'custom.dbui-rainbow'
 vim.defer_fn(function()
   local bufnr = vim.api.nvim_get_current_buf()
   if vim.api.nvim_buf_is_valid(bufnr) then
@@ -31,12 +31,10 @@ end, 50)
 local opts = { buffer = true, silent = true }
 
 -- Toggle rainbow style with <leader>dr (DBUI Rainbow)
-vim.keymap.set('n', '<leader>dr', ':DBUIToggleRainbowStyle<CR>', 
-  vim.tbl_extend('force', opts, { desc = 'Toggle DBUI Rainbow style' }))
+vim.keymap.set('n', '<leader>dr', ':DBUIToggleRainbowStyle<CR>', vim.tbl_extend('force', opts, { desc = 'Toggle DBUI Rainbow style' }))
 
 -- Show rainbow info with <leader>di (DBUI Info)
-vim.keymap.set('n', '<leader>di', ':DBUIRainbowInfo<CR>', 
-  vim.tbl_extend('force', opts, { desc = 'Show DBUI Rainbow info' }))
+vim.keymap.set('n', '<leader>di', ':DBUIRainbowInfo<CR>', vim.tbl_extend('force', opts, { desc = 'Show DBUI Rainbow info' }))
 
 -- Refresh syntax with <leader>dR (DBUI Refresh)
 vim.keymap.set('n', '<leader>dR', function()

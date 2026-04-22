@@ -1,15 +1,15 @@
 -- UI components using Snacks.win
 local M = {}
 
-local hl_ns = vim.api.nvim_create_namespace('bb_review_ui')
+local hl_ns = vim.api.nvim_create_namespace 'bb_review_ui'
 
 -- Highlight groups — defined with default=true so a colorscheme can override them
 local function setup_highlights()
   vim.api.nvim_set_hl(0, 'BbReviewHeader', { default = true, link = 'DiagnosticInfo' })
-  vim.api.nvim_set_hl(0, 'BbReviewHint',   { default = true, link = 'Comment' })
-  vim.api.nvim_set_hl(0, 'BbReviewSep',    { default = true, link = 'Comment' })
+  vim.api.nvim_set_hl(0, 'BbReviewHint', { default = true, link = 'Comment' })
+  vim.api.nvim_set_hl(0, 'BbReviewSep', { default = true, link = 'Comment' })
   vim.api.nvim_set_hl(0, 'BbReviewAuthor', { default = true, link = 'Title' })
-  vim.api.nvim_set_hl(0, 'BbReviewTime',   { default = true, link = 'Comment' })
+  vim.api.nvim_set_hl(0, 'BbReviewTime', { default = true, link = 'Comment' })
 end
 setup_highlights()
 
@@ -26,34 +26,46 @@ local function apply_highlights(buf, lines)
     if trimmed:sub(1, #SEP_CHAR) == SEP_CHAR then
       -- Separator line
       vim.api.nvim_buf_set_extmark(buf, hl_ns, row, 0, {
-        end_row = row, end_col = #line, hl_group = 'BbReviewSep',
+        end_row = row,
+        end_col = #line,
+        hl_group = 'BbReviewSep',
       })
-    elseif line:match('^  Thread %d') then
+    elseif line:match '^  Thread %d' then
       -- "Thread N / N" in header colour, navigation hints in muted hint colour
       local hint_byte = line:find('%s+<', 1)
       if hint_byte then
         vim.api.nvim_buf_set_extmark(buf, hl_ns, row, 0, {
-          end_row = row, end_col = hint_byte - 1, hl_group = 'BbReviewHeader',
+          end_row = row,
+          end_col = hint_byte - 1,
+          hl_group = 'BbReviewHeader',
         })
         vim.api.nvim_buf_set_extmark(buf, hl_ns, row, hint_byte - 1, {
-          end_row = row, end_col = #line, hl_group = 'BbReviewHint',
+          end_row = row,
+          end_col = #line,
+          hl_group = 'BbReviewHint',
         })
       else
         vim.api.nvim_buf_set_extmark(buf, hl_ns, row, 0, {
-          end_row = row, end_col = #line, hl_group = 'BbReviewHeader',
+          end_row = row,
+          end_col = #line,
+          hl_group = 'BbReviewHeader',
         })
       end
     else
       -- Author + timestamp line: ends with YYYY-MM-DD HH:MM
-      local ts_start = line:find('%d%d%d%d%-%d%d%-%d%d %d%d:%d%d')
+      local ts_start = line:find '%d%d%d%d%-%d%d%-%d%d %d%d:%d%d'
       if ts_start and ts_start > 1 then
         -- Author name (before the two spaces + timestamp)
         vim.api.nvim_buf_set_extmark(buf, hl_ns, row, 0, {
-          end_row = row, end_col = ts_start - 3, hl_group = 'BbReviewAuthor',
+          end_row = row,
+          end_col = ts_start - 3,
+          hl_group = 'BbReviewAuthor',
         })
         -- Timestamp
         vim.api.nvim_buf_set_extmark(buf, hl_ns, row, ts_start - 1, {
-          end_row = row, end_col = #line, hl_group = 'BbReviewTime',
+          end_row = row,
+          end_col = #line,
+          hl_group = 'BbReviewTime',
         })
       end
     end
@@ -122,7 +134,7 @@ function M.open_thread(threads, on_reply)
   end
   set_content()
 
-  Snacks.win({
+  Snacks.win {
     buf = buf,
     width = 0.6,
     height = 0.45,
@@ -155,7 +167,7 @@ function M.open_thread(threads, on_reply)
         end)
       end,
     },
-  })
+  }
 end
 
 -- Open an input window for composing a comment.
@@ -174,7 +186,9 @@ function M.open_input(title, on_submit)
   vim.api.nvim_create_autocmd('BufWriteCmd', {
     buffer = buf,
     callback = function()
-      if submitted then return end
+      if submitted then
+        return
+      end
       local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
       -- Strip trailing blank lines
       while #lines > 0 and vim.trim(lines[#lines]) == '' do
@@ -200,11 +214,11 @@ function M.open_input(title, on_submit)
     once = true,
     callback = function()
       vim.bo[buf].modifiable = true
-      vim.cmd('startinsert')
+      vim.cmd 'startinsert'
     end,
   })
 
-  Snacks.win({
+  Snacks.win {
     buf = buf,
     width = 0.6,
     height = 0.25,
@@ -214,7 +228,7 @@ function M.open_input(title, on_submit)
     border = 'rounded',
     enter = true,
     keys = {},
-  })
+  }
 end
 
 return M

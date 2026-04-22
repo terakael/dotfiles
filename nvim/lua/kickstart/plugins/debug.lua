@@ -79,14 +79,14 @@ return {
     {
       '<leader>de',
       function()
-        require('dap').set_exception_breakpoints({'raised', 'uncaught'})
+        require('dap').set_exception_breakpoints { 'raised', 'uncaught' }
       end,
       desc = 'Debug: Break on all exceptions',
     },
     {
       '<leader>dx',
       function()
-        require('dap').set_exception_breakpoints({})
+        require('dap').set_exception_breakpoints {}
       end,
       desc = 'Debug: Disable exception breakpoints',
     },
@@ -94,7 +94,7 @@ return {
       '<leader>dm',
       function()
         -- Maximize current debug window
-        vim.cmd('wincmd o')
+        vim.cmd 'wincmd o'
       end,
       desc = 'Debug: Maximize current pane',
     },
@@ -110,8 +110,14 @@ return {
           local buf = vim.api.nvim_win_get_buf(win)
           local ft = vim.api.nvim_buf_get_option(buf, 'filetype')
           -- Focus on non-debug UI windows (your actual code)
-          if ft ~= 'dapui_watches' and ft ~= 'dapui_stacks' and ft ~= 'dapui_breakpoints' 
-             and ft ~= 'dapui_scopes' and ft ~= 'dapui_console' and ft ~= 'dap-repl' then
+          if
+            ft ~= 'dapui_watches'
+            and ft ~= 'dapui_stacks'
+            and ft ~= 'dapui_breakpoints'
+            and ft ~= 'dapui_scopes'
+            and ft ~= 'dapui_console'
+            and ft ~= 'dap-repl'
+          then
             vim.api.nvim_set_current_win(win)
             break
           end
@@ -189,7 +195,7 @@ return {
     dap.listeners.before.event_exited['dapui_config'] = dapui.close
 
     -- Configure exception breakpoints for Python (only uncaught by default)
-    dap.defaults.fallback.exception_breakpoints = {'uncaught'}
+    dap.defaults.fallback.exception_breakpoints = { 'uncaught' }
 
     -- Install golang specific config
     require('dap-go').setup {
@@ -207,22 +213,22 @@ return {
         local port = (config.connect or config).port
         ---@diagnostic disable-next-line: undefined-field
         local host = (config.connect or config).host or '127.0.0.1'
-        cb({
+        cb {
           type = 'server',
           port = assert(port, '`connect.port` is required for a python `attach` configuration'),
           host = host,
           options = {
             source_filetype = 'python',
           },
-        })
+        }
       else
-        cb({
+        cb {
           type = 'executable',
           command = 'debugpy-adapter',
           options = {
             source_filetype = 'python',
           },
-        })
+        }
       end
     end
 
@@ -248,18 +254,18 @@ return {
         justMyCode = false,
         pythonPath = function()
           -- Use uv to find the right python in the project
-          local handle = io.popen('uv run which python 2>/dev/null')
-          local result = handle:read("*a")
+          local handle = io.popen 'uv run which python 2>/dev/null'
+          local result = handle:read '*a'
           handle:close()
-          if result and result ~= "" then
+          if result and result ~= '' then
             return vim.trim(result)
           end
           -- Fall back to venv or system python
-          local venv = os.getenv('VIRTUAL_ENV')
+          local venv = os.getenv 'VIRTUAL_ENV'
           if venv then
             return venv .. '/bin/python'
           end
-          return vim.fn.exepath('python3') or vim.fn.exepath('python') or 'python3'
+          return vim.fn.exepath 'python3' or vim.fn.exepath 'python' or 'python3'
         end,
       },
       {
@@ -273,7 +279,7 @@ return {
         justMyCode = false,
         pythonPath = function()
           -- Check for virtual environment first
-          local venv = os.getenv('VIRTUAL_ENV')
+          local venv = os.getenv 'VIRTUAL_ENV'
           if venv then
             return venv .. '/bin/python'
           end
@@ -284,7 +290,7 @@ return {
             return venv_path
           end
           -- Fall back to system python
-          return vim.fn.exepath('python3') or vim.fn.exepath('python') or 'python3'
+          return vim.fn.exepath 'python3' or vim.fn.exepath 'python' or 'python3'
         end,
       },
       {
@@ -296,23 +302,23 @@ return {
         cwd = '${workspaceFolder}',
         stopOnEntry = false,
         justMyCode = false,
-        args = function() 
-          local args_string = vim.fn.input('Arguments: ')
-          return vim.split(args_string, " +")
+        args = function()
+          local args_string = vim.fn.input 'Arguments: '
+          return vim.split(args_string, ' +')
         end,
         pythonPath = function()
           -- Use uv to find the right python in the project
-          local handle = io.popen('uv run which python 2>/dev/null')
-          local result = handle:read("*a")
+          local handle = io.popen 'uv run which python 2>/dev/null'
+          local result = handle:read '*a'
           handle:close()
-          if result and result ~= "" then
+          if result and result ~= '' then
             return vim.trim(result)
           end
-          local venv = os.getenv('VIRTUAL_ENV')
+          local venv = os.getenv 'VIRTUAL_ENV'
           if venv then
             return venv .. '/bin/python'
           end
-          return vim.fn.exepath('python3') or vim.fn.exepath('python') or 'python3'
+          return vim.fn.exepath 'python3' or vim.fn.exepath 'python' or 'python3'
         end,
       },
     }

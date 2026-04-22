@@ -1,6 +1,6 @@
 -- PR detection and comment state management
 local M = {}
-local api = require('bitbucket_review.api')
+local api = require 'bitbucket_review.api'
 
 M.state = {
   pr = nil,
@@ -15,7 +15,9 @@ M.state = {
 -- Run a command synchronously, return trimmed stdout or nil
 local function cmd(args)
   local r = vim.system(args, { text = true }):wait()
-  if r.code ~= 0 then return nil end
+  if r.code ~= 0 then
+    return nil
+  end
   return vim.trim(r.stdout)
 end
 
@@ -25,14 +27,20 @@ end
 --   ssh://git@host:7999/PROJECT/repo.git
 local function parse_remote(url)
   -- HTTPS
-  local base, proj, repo = url:match('(https?://[^/]+)/scm/([^/]+)/([^/.]+)')
-  if base then return base, proj:upper(), repo end
+  local base, proj, repo = url:match '(https?://[^/]+)/scm/([^/]+)/([^/.]+)'
+  if base then
+    return base, proj:upper(), repo
+  end
   -- SSH  ssh://git@host:port/PROJECT/REPO.git
-  base, proj, repo = url:match('ssh://[^@]+@([^:/]+)[:/]%d*/([^/]+)/([^/.]+)')
-  if base then return 'https://' .. base, proj:upper(), repo end
+  base, proj, repo = url:match 'ssh://[^@]+@([^:/]+)[:/]%d*/([^/]+)/([^/.]+)'
+  if base then
+    return 'https://' .. base, proj:upper(), repo
+  end
   -- SCP  git@host:PROJECT/REPO.git
-  base, proj, repo = url:match('[^@]+@([^:]+):([^/]+)/([^/.]+)')
-  if base then return 'https://' .. base, proj:upper(), repo end
+  base, proj, repo = url:match '[^@]+@([^:]+):([^/]+)/([^/.]+)'
+  if base then
+    return 'https://' .. base, proj:upper(), repo
+  end
   return nil, nil, nil
 end
 
@@ -68,21 +76,23 @@ end
 -- Lines outside all diff hunks are mapped via the cumulative delta at that point.
 local function make_line_mapper(diff_text)
   if not diff_text or diff_text == '' then
-    return function(l) return l end
+    return function(l)
+      return l
+    end
   end
 
-  local explicit = {}   -- [old_line] = new_line, or false for deleted lines
+  local explicit = {} -- [old_line] = new_line, or false for deleted lines
   -- Breakpoints: after processing each hunk we record the running delta for
   -- lines that fall between hunks (not explicitly mapped).
   -- Each entry: { old_end = N, delta = D } meaning "for old_line > N (until
   -- the next entry's old_end), new_line = old_line + D".
   local breakpoints = {}
-  local pre_hunk_delta = nil  -- delta valid before the first hunk
+  local pre_hunk_delta = nil -- delta valid before the first hunk
 
   local lines = vim.split(diff_text, '\n', { plain = true })
   local i = 1
   while i <= #lines do
-    local os, oc, ns = lines[i]:match('^@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@')
+    local os, oc, ns = lines[i]:match '^@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@'
     if os then
       local old_pos = tonumber(os)
       local new_pos = tonumber(ns)
@@ -103,12 +113,14 @@ local function make_line_mapper(diff_text)
         elseif ch == '+' then
           new_pos = new_pos + 1
         elseif ch == '@' then
-          break  -- start of next hunk; don't advance i
+          break -- start of next hunk; don't advance i
         elseif ch == 'd' or ch == 'i' then
-          break  -- next diff --git header
+          break -- next diff --git header
         end
         -- '\' (no newline at end of file) and empty lines: skip
-        if ch ~= '@' and ch ~= 'd' and ch ~= 'i' then i = i + 1 end
+        if ch ~= '@' and ch ~= 'd' and ch ~= 'i' then
+          i = i + 1
+        end
       end
       -- After this hunk: delta = new_pos - old_pos (both point past last line)
       table.insert(breakpoints, { old_end = old_pos - 1, delta = new_pos - old_pos })
@@ -118,13 +130,19 @@ local function make_line_mapper(diff_text)
   end
 
   if pre_hunk_delta == nil then
-    return function(l) return l end  -- no hunks parsed
+    return function(l)
+      return l
+    end -- no hunks parsed
   end
 
   return function(old_line)
     local v = explicit[old_line]
-    if v == false then return nil end   -- line was deleted
-    if v then return v end              -- context line explicitly mapped in hunk
+    if v == false then
+      return nil
+    end -- line was deleted
+    if v then
+      return v
+    end -- context line explicitly mapped in hunk
 
     -- Outside all hunks: apply the running delta at this position
     -- Scan breakpoints in order; the last one whose old_end < old_line applies.
@@ -148,17 +166,19 @@ local function apply_line_maps(inline, callback)
   local needed = {}
   for _, c in ipairs(inline) do
     local to_hash = c.anchor and c.anchor.toHash
-    local path    = c.anchor and c.anchor.path
+    local path = c.anchor and c.anchor.path
     if to_hash and path then
       local key = path .. '\0' .. to_hash
       needed[key] = { path = path, to_hash = to_hash }
     end
   end
 
-  local mappers  = {}
-  local total    = 0
+  local mappers = {}
+  local total = 0
   local finished = 0
-  for _ in pairs(needed) do total = total + 1 end
+  for _ in pairs(needed) do
+    total = total + 1
+  end
 
   if total == 0 then
     callback()
@@ -167,14 +187,18 @@ local function apply_line_maps(inline, callback)
 
   local function on_done()
     finished = finished + 1
-    if finished < total then return end
+    if finished < total then
+      return
+    end
     -- Apply mappers to set _mapped_line on each comment
     for _, c in ipairs(inline) do
       local to_hash = c.anchor and c.anchor.toHash
-      local path    = c.anchor and c.anchor.path
+      local path = c.anchor and c.anchor.path
       if to_hash and path then
-        local key    = path .. '\0' .. to_hash
-        local mapper = mappers[key] or function(l) return l end
+        local key = path .. '\0' .. to_hash
+        local mapper = mappers[key] or function(l)
+          return l
+        end
         c._mapped_line = mapper(c.anchor.line)
       end
     end
@@ -183,29 +207,27 @@ local function apply_line_maps(inline, callback)
 
   for key, info in pairs(needed) do
     local k = key
-    vim.system(
-      { 'git', 'diff', info.to_hash .. '..HEAD', '--', info.path },
-      { text = true },
-      function(r)
-        vim.schedule(function()
-          mappers[k] = make_line_mapper(r.code == 0 and r.stdout or '')
-          on_done()
-        end)
-      end
-    )
+    vim.system({ 'git', 'diff', info.to_hash .. '..HEAD', '--', info.path }, { text = true }, function(r)
+      vim.schedule(function()
+        mappers[k] = make_line_mapper(r.code == 0 and r.stdout or '')
+        on_done()
+      end)
+    end)
   end
 end
 
 -- Returns git root for cwd (sync)
 function M.git_root()
-  return cmd({ 'git', 'rev-parse', '--show-toplevel' })
+  return cmd { 'git', 'rev-parse', '--show-toplevel' }
 end
 
 -- Returns repo-relative path of bufnr (or current buffer)
 function M.relative_path(bufnr)
   local abs = vim.api.nvim_buf_get_name(bufnr or 0)
   local root = M.git_root()
-  if not root or abs == '' then return nil end
+  if not root or abs == '' then
+    return nil
+  end
   if abs:sub(1, #root) == root then
     return abs:sub(#root + 2)
   end
@@ -214,7 +236,7 @@ end
 
 -- Detect PR for the current worktree. callback(err, pr_or_nil)
 function M.detect(callback)
-  local branch = cmd({ 'git', 'branch', '--show-current' })
+  local branch = cmd { 'git', 'branch', '--show-current' }
   if not branch then
     callback('not in a git repo', nil)
     return
@@ -223,7 +245,7 @@ function M.detect(callback)
     callback(nil, nil)
     return
   end
-  local remote_url = cmd({ 'git', 'remote', 'get-url', 'origin' })
+  local remote_url = cmd { 'git', 'remote', 'get-url', 'origin' }
   if not remote_url then
     callback('no git remote origin', nil)
     return
@@ -238,12 +260,22 @@ function M.detect(callback)
   M.state.repo = repo
   M.state.branch = branch
 
-  local url = ('%s/rest/api/1.0/projects/%s/repos/%s/pull-requests?at=refs/heads/%s&state=OPEN&direction=OUTGOING')
-    :format(base_url, project, repo, api.urlencode(branch))
+  local url = ('%s/rest/api/1.0/projects/%s/repos/%s/pull-requests?at=refs/heads/%s&state=OPEN&direction=OUTGOING'):format(
+    base_url,
+    project,
+    repo,
+    api.urlencode(branch)
+  )
   api.get(url, function(err, data)
-    if err then callback(err, nil); return end
+    if err then
+      callback(err, nil)
+      return
+    end
     local prs = (data or {}).values or {}
-    if #prs == 0 then callback(nil, nil); return end
+    if #prs == 0 then
+      callback(nil, nil)
+      return
+    end
     M.state.pr = prs[1]
     callback(nil, M.state.pr)
   end)
@@ -254,11 +286,16 @@ end
 -- callback(err, inline_comments)
 function M.fetch_comments(callback)
   local pr = M.state.pr
-  if not pr then callback('no PR bound', nil); return end
-  local url = ('%s/rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/activities')
-    :format(M.state.base_url, M.state.project, M.state.repo, pr.id)
+  if not pr then
+    callback('no PR bound', nil)
+    return
+  end
+  local url = ('%s/rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/activities'):format(M.state.base_url, M.state.project, M.state.repo, pr.id)
   api.get_all(url, function(err, activities)
-    if err then callback(err, nil); return end
+    if err then
+      callback(err, nil)
+      return
+    end
     -- Extract top-level inline comments from COMMENTED activities.
     -- The anchor lives at act.commentAnchor (activity level), not act.comment.anchor.
     -- General PR comments have no commentAnchor; skip those.
@@ -268,7 +305,7 @@ function M.fetch_comments(callback)
         local anchor = act.commentAnchor
         local c = act.comment
         if c and anchor and anchor.line and anchor.path and not c.parent then
-          c.anchor = anchor  -- attach for indexing and posting replies
+          c.anchor = anchor -- attach for indexing and posting replies
           table.insert(inline, c)
         end
       end
@@ -284,7 +321,9 @@ end
 -- Each element is a list of comments (top-level + replies, depth-tagged)
 function M.get_threads(file_path, line)
   local by_line = M.state.by_file_line[file_path]
-  if not by_line then return {} end
+  if not by_line then
+    return {}
+  end
   local threads = {}
   for _, top in ipairs(by_line[line] or {}) do
     table.insert(threads, flatten(top))
@@ -298,23 +337,29 @@ local function detect_line_type(file_path, line_num, callback)
   vim.system({ 'git', 'diff', 'development..HEAD', '--', file_path }, { text = true }, function(r)
     vim.schedule(function()
       if r.code ~= 0 or not r.stdout or r.stdout == '' then
-        callback('ADDED')
+        callback 'ADDED'
         return
       end
       local to_line = 0
       local found = 'CONTEXT'
       for _, dline in ipairs(vim.split(r.stdout, '\n')) do
-        local ns, _ = dline:match('^@@ %-%d+,?%d* %+(%d+),?(%d*) @@')
+        local ns, _ = dline:match '^@@ %-%d+,?%d* %+(%d+),?(%d*) @@'
         if ns then
           to_line = tonumber(ns) - 1
-        elseif dline:match('^%+') and not dline:match('^%+%+%+') then
+        elseif dline:match '^%+' and not dline:match '^%+%+%+' then
           to_line = to_line + 1
-          if to_line == line_num then found = 'ADDED'; break end
-        elseif dline:match('^%-') and not dline:match('^%-%-%-') then
+          if to_line == line_num then
+            found = 'ADDED'
+            break
+          end
+        elseif dline:match '^%-' and not dline:match '^%-%-%-' then
           -- removed line: does not advance to-side counter
-        elseif not dline:match('^\\') and dline ~= '' then
+        elseif not dline:match '^\\' and dline ~= '' then
           to_line = to_line + 1
-          if to_line == line_num then found = 'CONTEXT'; break end
+          if to_line == line_num then
+            found = 'CONTEXT'
+            break
+          end
         end
       end
       callback(found)
@@ -325,9 +370,11 @@ end
 -- Post a new inline comment. callback(err, comment)
 function M.post_comment(file_path, line, text, callback)
   local pr = M.state.pr
-  if not pr then callback('no PR bound', nil); return end
-  local url = ('%s/rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/comments')
-    :format(M.state.base_url, M.state.project, M.state.repo, pr.id)
+  if not pr then
+    callback('no PR bound', nil)
+    return
+  end
+  local url = ('%s/rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/comments'):format(M.state.base_url, M.state.project, M.state.repo, pr.id)
 
   local function do_post(line_type)
     local body = {
@@ -343,7 +390,7 @@ function M.post_comment(file_path, line, text, callback)
     api.post(url, body, function(err, comment)
       if err and line_type == 'ADDED' then
         -- Retry as CONTEXT (line may be unchanged relative to base)
-        do_post('CONTEXT')
+        do_post 'CONTEXT'
       elseif err then
         callback(err, nil)
       else
@@ -359,11 +406,16 @@ end
 -- Post a reply to an existing comment. callback(err, comment)
 function M.post_reply(parent_id, text, callback)
   local pr = M.state.pr
-  if not pr then callback('no PR bound', nil); return end
-  local url = ('%s/rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/comments')
-    :format(M.state.base_url, M.state.project, M.state.repo, pr.id)
+  if not pr then
+    callback('no PR bound', nil)
+    return
+  end
+  local url = ('%s/rest/api/1.0/projects/%s/repos/%s/pull-requests/%d/comments'):format(M.state.base_url, M.state.project, M.state.repo, pr.id)
   api.post(url, { text = text, parent = { id = parent_id } }, function(err, comment)
-    if err then callback(err, nil); return end
+    if err then
+      callback(err, nil)
+      return
+    end
     M.fetch_comments(function() end)
     callback(nil, comment)
   end)

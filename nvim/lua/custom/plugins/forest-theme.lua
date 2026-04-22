@@ -17,7 +17,7 @@ return {
       end,
       on_highlights = function(hl, palette)
         -- Python / general parameter + docstring overrides
-        hl['@variable.parameter']   = { fg = palette.blue }
+        hl['@variable.parameter'] = { fg = palette.blue }
         hl['@string.documentation'] = { fg = palette.grey1, italic = true }
 
         -- Mini statusline mode colors
@@ -53,12 +53,12 @@ return {
         hl['@string.yaml'] = { fg = palette.aqua }
 
         -- Markdown (restore colors from old forest theme)
-        hl['@markup.strong']   = { fg = palette.yellow, bold = true }
-        hl['@markup.italic']   = { fg = palette.purple, italic = true }
-        hl['@markup.raw']      = { fg = palette.green }
-        hl['@markup.list']     = { fg = palette.aqua }
-        hl['@markup.quote']    = { fg = palette.grey1, italic = true }
-        hl['@markup.link']     = { fg = palette.blue, underline = true }
+        hl['@markup.strong'] = { fg = palette.yellow, bold = true }
+        hl['@markup.italic'] = { fg = palette.purple, italic = true }
+        hl['@markup.raw'] = { fg = palette.green }
+        hl['@markup.list'] = { fg = palette.aqua }
+        hl['@markup.quote'] = { fg = palette.grey1, italic = true }
+        hl['@markup.link'] = { fg = palette.blue, underline = true }
         hl['@markup.link.label'] = { fg = palette.aqua }
         hl['@markup.link.url'] = { fg = palette.blue, italic = true }
       end,
