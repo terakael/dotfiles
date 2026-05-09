@@ -122,6 +122,12 @@ return { -- Fuzzy Finder (files, lsp, etc)
         ['ui-select'] = {
           require('telescope.themes').get_dropdown(),
         },
+        cmdline = {
+          mappings = {
+            run_input = '<CR>',
+            run_selection = '<S-CR>',
+          },
+        },
       },
     }
     require('telescope').load_extension 'cmdline'
