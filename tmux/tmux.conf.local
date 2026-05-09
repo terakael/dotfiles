@@ -13,6 +13,7 @@ bind , command-prompt -I "" { rename-window "%%" }
 set -sg repeat-time 0
 set -g allow-passthrough on
 
+setw -g mode-keys vi
 bind-key -n S-Enter send-keys "\e[13;2u"
 bind -n "C-S-s" run-shell "~/.config/tmux/plugins/toggle-split.sh"
 
@@ -396,16 +397,10 @@ bind-key -n 'C-j' if -F "#{@pane-is-vim}" 'send-keys C-j' 'select-pane -ZD'
 bind-key -n 'C-k' if -F "#{@pane-is-vim}" 'send-keys C-k' 'select-pane -ZU'
 bind-key -n 'C-l' if -F "#{@pane-is-vim}" 'send-keys C-l' 'select-pane -ZR'
 
-bind-key -n 'C-\\' if -F '#{@pane-is-vim}' 'send-keys C-\\\\'  'select-pane -l'
-
-bind-key -n 'C-Space' if -F "#{@pane-is-vim}" 'send-keys C-Space' 'select-pane -t:.+'
-
-bind-key -T copy-mode-vi 'C-h' select-pane -L
-bind-key -T copy-mode-vi 'C-j' select-pane -D
-bind-key -T copy-mode-vi 'C-k' select-pane -U
-bind-key -T copy-mode-vi 'C-l' select-pane -R
-bind-key -T copy-mode-vi 'C-\' select-pane -l
-bind-key -T copy-mode-vi 'C-Space' select-pane -t:.+
+bind-key -T copy-mode-vi 'C-h' select-pane -ZL
+bind-key -T copy-mode-vi 'C-j' select-pane -ZD
+bind-key -T copy-mode-vi 'C-k' select-pane -ZU
+bind-key -T copy-mode-vi 'C-l' select-pane -ZR
 
 # some custom text-object motions to select word/Word
 bind-key -T copy-mode-vi i switch-client -T text-object
