@@ -12,6 +12,7 @@ bind , command-prompt -I "" { rename-window "%%" }
 
 set -sg repeat-time 0
 set -g allow-passthrough on
+set -s set-clipboard on
 
 setw -g mode-keys vi
 bind-key -n S-Enter send-keys "\e[13;2u"
