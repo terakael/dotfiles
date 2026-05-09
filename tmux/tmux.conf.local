@@ -391,17 +391,12 @@ tmux_conf_copy_to_os_clipboard=true
 tmux_conf_urlscan_options="--compact --dedupe"
 
 # @pane-is-vim is set/unset by Neovim autocmds — no ps subprocess needed
-bind-key -n 'C-h' if -F "#{@pane-is-vim}" 'send-keys C-h' 'run-shell "bash ~/.config/tmux/plugins/tmux-navigate.sh -L"'
-bind-key -n 'C-j' if -F "#{@pane-is-vim}" 'send-keys C-j' 'run-shell "bash ~/.config/tmux/plugins/tmux-navigate.sh -D"'
-bind-key -n 'C-k' if -F "#{@pane-is-vim}" 'send-keys C-k' 'run-shell "bash ~/.config/tmux/plugins/tmux-navigate.sh -U"'
-bind-key -n 'C-l' if -F "#{@pane-is-vim}" 'send-keys C-l' 'run-shell "bash ~/.config/tmux/plugins/tmux-navigate.sh -R"'
+bind-key -n 'C-h' if -F "#{@pane-is-vim}" 'send-keys C-h' 'select-pane -ZL'
+bind-key -n 'C-j' if -F "#{@pane-is-vim}" 'send-keys C-j' 'select-pane -ZD'
+bind-key -n 'C-k' if -F "#{@pane-is-vim}" 'send-keys C-k' 'select-pane -ZU'
+bind-key -n 'C-l' if -F "#{@pane-is-vim}" 'send-keys C-l' 'select-pane -ZR'
 
-tmux_version='$(tmux -V | sed -En "s/^tmux ([0-9]+(.[0-9]+)?).*/\\1/p")'
-
-if-shell -b '[ "$(echo "$tmux_version < 3.0" | bc)" = 1 ]' \
-    "bind-key -n 'C-\\' if -F '#{@pane-is-vim}' 'send-keys C-\\'  'select-pane -l'"
-if-shell -b '[ "$(echo "$tmux_version >= 3.0" | bc)" = 1 ]' \
-    "bind-key -n 'C-\\' if -F '#{@pane-is-vim}' 'send-keys C-\\\\'  'select-pane -l'"
+bind-key -n 'C-\\' if -F '#{@pane-is-vim}' 'send-keys C-\\\\'  'select-pane -l'
 
 bind-key -n 'C-Space' if -F "#{@pane-is-vim}" 'send-keys C-Space' 'select-pane -t:.+'
 
