@@ -412,6 +412,8 @@ bind-key -T text-object W \
     send-keys -X next-space-end
 bind-key -T text-object Escape switch-client -T copy-mode-vi
 
+bind-key -T copy-mode-vi E send-keys -X next-space-end
+
 set -s extended-keys on
 set -g extended-keys-format csi-u
 set -as terminal-features 'tmux*:extkeys'
