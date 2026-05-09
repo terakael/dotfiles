@@ -93,26 +93,6 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
--- Function to detect Python interpreter with proper fallback chain
-local function get_python_path(workspace)
-  -- Check if pyrightconfig.json exists (pyright will handle it automatically)
-  -- We still need to find the actual Python interpreter though
-
-  -- Try .venv in workspace root
-  if workspace then
-    local venv_python = workspace .. '/.venv/bin/python'
-    if vim.fn.executable(venv_python) == 1 then
-      return venv_python
-    end
-  end
-
-  -- Fallback to system Python
-  return '/home/linuxbrew/.linuxbrew/bin/python3'
-end
-
--- Set Python provider (for Neovim's Python integration)
-vim.g.python3_host_prog = get_python_path(vim.fn.getcwd())
-
 -- [[ Setting options ]]
 -- See `:help vim.opt`
 -- NOTE: You can change these options as you wish!
@@ -389,27 +369,6 @@ require('lazy').setup({
       },
     },
   },
-
-  -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
-  --
-  -- This is often very useful to both group configuration, as well as handle
-  -- lazy loading plugins that don't need to be loaded immediately at startup.
-  --
-  -- For example, in the following configuration, we use:
-  --  event = 'VimEnter'
-  --
-  -- which loads which-key before all the UI elements are loaded. Events can be
-  -- normal autocommands events (`:help autocmd-events`).
-  --
-  -- Then, because we use the `opts` key (recommended), the configuration runs
-  -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
-
-  -- NOTE: Plugins can specify dependencies.
-  --
-  -- The dependencies are proper plugin specifications as well - anything
-  -- you do for a plugin at the top level, you can do for a dependency.
-  --
-  -- Use the `dependencies` key to specify the dependencies of a particular plugin
 
   -- LSP Plugins
   {
