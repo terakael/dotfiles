@@ -103,7 +103,7 @@ return { -- Fuzzy Finder (files, lsp, etc)
           horizontal = {
             width = 0.98,
             height = 0.98,
-            preview_width = 0.6,
+            preview_width = 0.5,
           },
           vertical = {
             width = 0.98,
@@ -130,11 +130,11 @@ return { -- Fuzzy Finder (files, lsp, etc)
         },
       },
     }
-    require('telescope').load_extension 'cmdline'
 
     -- Enable Telescope extensions if they are installed
     pcall(require('telescope').load_extension, 'fzf')
     pcall(require('telescope').load_extension, 'ui-select')
+    pcall(require('telescope').load_extension, 'cmdline')
 
     -- See `:help telescope.builtin`
     local builtin = require 'telescope.builtin'
