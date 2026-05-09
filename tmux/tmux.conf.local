@@ -15,8 +15,11 @@ set -g allow-passthrough on
 
 setw -g mode-keys vi
 bind-key -n S-Enter send-keys "\e[13;2u"
-bind -n "C-S-s" run-shell "~/.config/tmux/plugins/toggle-split.sh"
 
+# Toggle between stacked and side-by-side layouts
+bind -n "C-S-s" if-shell -F '#{==:#{window_width},#{pane_width}}' \
+    'select-layout even-horizontal' \
+    'select-layout even-vertical'
 # -- bindings ------------------------------------------------------------------
 
 # preserve tmux stock bindings,
@@ -113,25 +116,6 @@ tmux_conf_theme_colour_14="#2e2e2e"   # baby dark gray
 tmux_conf_theme_colour_15="#252321"   # baby dark gray
 tmux_conf_theme_colour_16="#ff7f7f"   # baby red
 tmux_conf_theme_colour_17="#f5f5f5"   # baby white
-
-# default theme (ansi)
-#tmux_conf_theme_colour_1="colour0"
-#tmux_conf_theme_colour_2="colour8"
-#tmux_conf_theme_colour_3="colour8"
-#tmux_conf_theme_colour_4="colour14"
-#tmux_conf_theme_colour_5="colour11"
-#tmux_conf_theme_colour_6="colour0"
-#tmux_conf_theme_colour_7="colour15"
-#tmux_conf_theme_colour_8="colour0"
-#tmux_conf_theme_colour_9="colour11"
-#tmux_conf_theme_colour_10="colour13"
-#tmux_conf_theme_colour_11="colour10"
-#tmux_conf_theme_colour_12="colour8"
-#tmux_conf_theme_colour_13="colour15"
-#tmux_conf_theme_colour_14="colour0"
-#tmux_conf_theme_colour_15="colour0"
-#tmux_conf_theme_colour_16="colour1"
-#tmux_conf_theme_colour_17="colour15"
 
 # window style
 tmux_conf_theme_window_fg="default"
@@ -283,7 +267,7 @@ tmux_conf_theme_status_left="#{prefix}"
 # tmux_conf_theme_status_left=" ❐ #S "
 #tmux_conf_theme_status_left=" ❐ #S | ↑#{?uptime_y, #{uptime_y}y,}#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} | #{pretty_pane_current_path} "
 # tmux_conf_theme_status_right=" #{prefix}#{mouse}#{pairing}#{synchronized} "
-tmux_conf_theme_status_right=""
+tmux_conf_theme_status_right="#{pane_title}"
 
 # status left style
 tmux_conf_theme_status_left_fg="$tmux_conf_theme_colour_12,$tmux_conf_theme_colour_13,$tmux_conf_theme_colour_14"
@@ -413,6 +397,72 @@ bind-key -T text-object W \
 bind-key -T text-object Escape switch-client -T copy-mode-vi
 
 bind-key -T copy-mode-vi E send-keys -X next-space-end
+
+# If there is a selection, copy and cancel.
+# If there is NO selection, switch to the 'yank-operator' key table.
+bind-key -T copy-mode-vi y if-shell -F "#{selection_present}" \
+    "send-keys -X copy-selection-and-cancel" \
+    "switch-client -T yank-operator"
+
+# yE: Yank to end of WORD (space-delimited)
+bind-key -T yank-operator E \
+    send-keys -X begin-selection \; \
+    send-keys -X next-space-end \; \
+    send-keys -X copy-selection-and-cancel
+
+# yw: Yank to end of word
+bind-key -T yank-operator w \
+    send-keys -X begin-selection \; \
+    send-keys -X next-word-end \; \
+    send-keys -X copy-selection-and-cancel
+
+# y$: Yank to end of line
+bind-key -T yank-operator $ \
+    send-keys -X begin-selection \; \
+    send-keys -X end-of-line \; \
+    send-keys -X copy-selection-and-cancel
+
+# yy: Yank entire line (optional, but very vim-like!)
+bind-key -T yank-operator y \
+    send-keys -X clear-selection \; \
+    send-keys -X start-of-line \; \
+    send-keys -X begin-selection \; \
+    send-keys -X end-of-line \; \
+    send-keys -X copy-selection-and-cancel
+
+# If the user types 'i' or 'a' after 'y', switch to sub-tables
+bind-key -T yank-operator i switch-client -T yank-inside
+bind-key -T yank-operator a switch-client -T yank-around
+
+# yiw / yaw: Select the word under cursor and copy
+# (Tmux doesn't natively distinguish between "around" and "inside" for words, so we map both to select-word)
+bind-key -T yank-inside w \
+    send-keys -X select-word \; \
+    send-keys -X copy-selection-and-cancel
+
+bind-key -T yank-around w \
+    send-keys -X select-word \; \
+    send-keys -X copy-selection-and-cancel
+
+# yiW / yaW: Select space-delimited WORD and copy
+bind-key -T yank-inside W \
+    send-keys -X clear-selection \; \
+    send-keys -X previous-space \; \
+    send-keys -X begin-selection \; \
+    send-keys -X next-space-end \; \
+    send-keys -X copy-selection-and-cancel
+
+bind-key -T yank-around W \
+    send-keys -X clear-selection \; \
+    send-keys -X previous-space \; \
+    send-keys -X begin-selection \; \
+    send-keys -X next-space-end \; \
+    send-keys -X copy-selection-and-cancel
+
+# pressing Escape cancels the yank operator
+bind-key -T yank-operator Escape switch-client -T copy-mode-vi
+bind-key -T yank-inside Escape switch-client -T copy-mode-vi
+bind-key -T yank-around Escape switch-client -T copy-mode-vi
 
 set -s extended-keys on
 set -g extended-keys-format csi-u
