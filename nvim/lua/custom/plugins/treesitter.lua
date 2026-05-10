@@ -1,4 +1,4 @@
-return { -- Highlight, edit, and navigate code
+return {
   'nvim-treesitter/nvim-treesitter',
   build = ':TSUpdate',
   dependencies = {
@@ -49,20 +49,14 @@ return { -- Highlight, edit, and navigate code
       end,
     })
 
-    -- Disable treesitter-based indentation
-    -- Treesitter indentation can be unreliable, especially in insert mode
-    -- Use filetype-specific indent files instead (python.vim, etc.)
-    -- If you want to re-enable it for specific languages, uncomment and modify:
-    -- vim.api.nvim_create_autocmd('FileType', {
-    --   pattern = { 'lua', 'javascript', 'typescript' },
-    --   callback = function()
-    --     vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-    --   end,
-    -- })
-
     -- Configure treesitter
     require('nvim-treesitter.configs').setup {
-      -- Textobjects configuration
+      ensure_installed = { 'python', 'lua', 'vim', 'vimdoc', 'query' },
+      ignore_install = {},
+      modules = {},
+      sync_install = true,
+      auto_install = true,
+      highlight = { enable = true },
       textobjects = {
         select = {
           enable = true,
