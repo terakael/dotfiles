@@ -9,10 +9,10 @@ vim.api.nvim_create_autocmd({ 'VimEnter', 'DirChanged' }, {
 
     -- Check if .venv exists and pyrightconfig.json doesn't
     if vim.fn.isdirectory(venv_path) == 1 and vim.fn.filereadable(pyright_config) == 0 then
-      local config_content = vim.json.encode({
+      local config_content = vim.json.encode {
         venvPath = '.',
         venv = '.venv',
-      })
+      }
       local file = io.open(pyright_config, 'w')
       if file then
         file:write(config_content)
@@ -28,7 +28,7 @@ vim.api.nvim_create_autocmd({ 'FocusGained', 'TermClose', 'TermLeave', 'CursorHo
   group = vim.api.nvim_create_augroup('auto-reload', { clear = true }),
   callback = function()
     if vim.o.buftype ~= 'nofile' then
-      vim.cmd('checktime')
+      vim.cmd 'checktime'
     end
   end,
 })
@@ -49,27 +49,37 @@ vim.api.nvim_create_autocmd('FileType', {
   group = vim.api.nvim_create_augroup('helm-highlights', { clear = true }),
   pattern = 'helm',
   callback = function()
-    local colors = require('forest.colors')
-    
+    local colors = require 'forest.colors'
+
     -- Highlight template brackets distinctly (like vim-helm's PreProc)
     vim.api.nvim_set_hl(0, '@punctuation.bracket.helm', { fg = colors.red, bold = true })
     vim.api.nvim_set_hl(0, '@punctuation.bracket.gotmpl', { fg = colors.red, bold = true })
-    
+
     -- Helm-specific constants (.Values, .Release, .Chart)
     vim.api.nvim_set_hl(0, '@constant.builtin.helm', { fg = colors.bright_magenta, bold = true })
     vim.api.nvim_set_hl(0, '@constant.builtin.gotmpl', { fg = colors.bright_magenta, bold = true })
-    
+
     -- Template variables and nested properties
     vim.api.nvim_set_hl(0, '@variable.member.helm', { fg = colors.yellow })
     vim.api.nvim_set_hl(0, '@variable.member.gotmpl', { fg = colors.yellow })
-    
+
     -- YAML properties (keys)
     vim.api.nvim_set_hl(0, '@property', { fg = colors.blue, bold = true })
     vim.api.nvim_set_hl(0, '@string.yaml', { fg = colors.cyan })
-    
+
     -- Sprig/template functions
     vim.api.nvim_set_hl(0, '@function.builtin.helm', { fg = colors.green, bold = true })
     vim.api.nvim_set_hl(0, '@function.builtin.gotmpl', { fg = colors.green, bold = true })
+
+    -- Markdown (restore colors from old forest theme)
+    vim.api.nvim_set_hl(0, '@markup.strong', { fg = colors.yellow, bold = true })
+    vim.api.nvim_set_hl(0, '@markup.italic', { fg = colors.purple, italic = true })
+    vim.api.nvim_set_hl(0, '@markup.raw', { fg = colors.green })
+    vim.api.nvim_set_hl(0, '@markup.list', { fg = colors.aqua })
+    vim.api.nvim_set_hl(0, '@markup.quote', { fg = colors.grey1, italic = true })
+    vim.api.nvim_set_hl(0, '@markup.link', { fg = colors.blue, underline = true })
+    vim.api.nvim_set_hl(0, '@markup.link.label', { fg = colors.aqua })
+    vim.api.nvim_set_hl(0, '@markup.link.url', { fg = colors.blue, italic = true })
   end,
 })
 
