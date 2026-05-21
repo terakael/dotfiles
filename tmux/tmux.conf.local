@@ -422,7 +422,7 @@ bind -n 'C-S-k' swap-pane -d -t '{up-of}'
 bind -n 'C-S-l' swap-pane -d -t '{right-of}'
 
 # move status line to top
-set -g status-position bottom
+set -g status-position top
 
 # skip confirmation when closing panes and windows
 bind x kill-pane
