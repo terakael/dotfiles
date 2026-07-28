@@ -99,6 +99,10 @@ return { -- Fuzzy Finder (files, lsp, etc)
         },
       },
       defaults = {
+        -- 'flex' swaps between horizontal (preview right) and vertical (preview below)
+        -- based on window size: vertical kicks in when the window is narrower than
+        -- flip_columns AND taller than flip_lines. Tune those two numbers for taste.
+        layout_strategy = 'flex',
         layout_config = {
           horizontal = {
             width = 0.98,
@@ -110,6 +114,10 @@ return { -- Fuzzy Finder (files, lsp, etc)
             height = 0.98,
             preview_height = 0.5,
           },
+          -- Below flip_columns AND above flip_lines: use vertical (preview below).
+          -- Above flip_columns: use horizontal (preview right).
+          flip_columns = 120,
+          flip_lines = 30,
         },
         file_ignore_patterns = {
           '^%.venv/',
@@ -209,7 +217,7 @@ return { -- Fuzzy Finder (files, lsp, etc)
       builtin.find_files { cwd = vim.fn.stdpath 'config' }
     end, { desc = '[S]earch [N]eovim files' })
 
-    vim.keymap.set('n', ':', function()
+    vim.keymap.set('n', '<leader>:', function()
       vim.cmd 'Telescope cmdline'
     end, { desc = 'cmdline' })
   end,

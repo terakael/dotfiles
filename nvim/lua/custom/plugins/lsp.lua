@@ -164,6 +164,7 @@ return {
         'ruff',
         'typescript-language-server',
         'lua-language-server',
+        'jdtls',
         -- Formatters / linters
         'stylua',
         'sql-formatter',
@@ -177,7 +178,13 @@ return {
       capabilities = capabilities,
     })
 
+    local lombok_jar = vim.fn.expand '~/.m2/repository/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar'
+
+    vim.lsp.config('jdtls', {
+      cmd = { 'jdtls', '--jvm-arg=-javaagent:' .. lombok_jar },
+    })
+
     -- Enable LSP servers
-    vim.lsp.enable { 'marksman', 'pyright', 'ruff', 'ts_ls', 'lua_ls' }
+    vim.lsp.enable { 'marksman', 'pyright', 'ruff', 'ts_ls', 'lua_ls', 'jdtls' }
   end,
 }

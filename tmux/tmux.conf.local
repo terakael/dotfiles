@@ -376,6 +376,9 @@ tmux_conf_copy_to_os_clipboard=true
 # options passed to urlscan
 tmux_conf_urlscan_options="--compact --dedupe"
 
+bind-key -r b display-popup -w 80% -h 80% btop --force-utf
+bind-key -r Enter display-popup -w 80% -h 80% -d "#{pane_current_path}"
+
 # @pane-is-vim is set/unset by Neovim autocmds — no ps subprocess needed
 bind-key -n 'C-h' if -F "#{@pane-is-vim}" 'send-keys C-h' 'select-pane -ZL'
 bind-key -n 'C-j' if -F "#{@pane-is-vim}" 'send-keys C-j' 'select-pane -ZD'
@@ -475,7 +478,7 @@ bind -n 'C-S-k' swap-pane -d -t '{up-of}'
 bind -n 'C-S-l' swap-pane -d -t '{right-of}'
 
 # move status line to top
-set -g status-position bottom
+set -g status-position top
 
 # skip confirmation when closing panes and windows
 bind x kill-pane
