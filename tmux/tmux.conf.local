@@ -378,6 +378,7 @@ tmux_conf_urlscan_options="--compact --dedupe"
 
 bind-key -r b display-popup -w 80% -h 80% btop --force-utf
 bind-key -r Enter display-popup -w 80% -h 80% -d "#{pane_current_path}"
+bind g display-popup -E -w 80% -h 80% "tmux attach-session -t scratch || tmux new-session -s scratch"
 
 # @pane-is-vim is set/unset by Neovim autocmds — no ps subprocess needed
 bind-key -n 'C-h' if -F "#{@pane-is-vim}" 'send-keys C-h' 'select-pane -ZL'
