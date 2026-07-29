@@ -10,7 +10,22 @@ return {
       end,
       desc = 'Zen Zoom',
     },
+    {
+      '<C-\\>',
+      function()
+        Snacks.terminal.toggle()
+      end,
+      desc = 'Toggle Terminal',
+    },
   },
+  -- Register the actual keymap once snacks is loaded
+  config = function(_, opts)
+    require('snacks').setup(opts)
+    local toggle = function()
+      Snacks.terminal.toggle()
+    end
+    vim.keymap.set({ 'n', 't' }, '<C-\\>', toggle, { desc = 'Toggle Terminal' })
+  end,
   opts = {
     animate = { enabled = true },
     scroll = {

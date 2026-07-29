@@ -25,7 +25,7 @@ return {
     end
 
     for _, dir in ipairs { 'h', 'j', 'k', 'l' } do
-      vim.keymap.set('n', '<C-' .. dir .. '>', function()
+      vim.keymap.set({ 'n', 't' }, '<C-' .. dir .. '>', function()
         navigate(dir)
       end)
     end
