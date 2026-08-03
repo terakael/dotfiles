@@ -14,6 +14,6 @@ return {
   -- Optional dependencies
   dependencies = { 'nvim-tree/nvim-web-devicons' },
   keys = {
-    { '-', '<cmd>Oil<cr>', desc = 'Open parent directory (floating)' },
+    { '-', '<cmd>Oil --float<cr>', desc = 'Open parent directory (floating)' },
   },
 }

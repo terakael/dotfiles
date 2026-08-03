@@ -239,6 +239,12 @@ vim.keymap.set('i', '<M-k>', '<Esc>:m .-2<CR>==gi', { desc = 'Move line up' })
 vim.keymap.set('v', '<M-j>', ":m '>+1<CR>gv=gv", { desc = 'Move selection down' })
 vim.keymap.set('v', '<M-k>', ":m '<-2<CR>gv=gv", { desc = 'Move selection up' })
 
+-- Normal Mode: Press <leader>; to append a semicolon and stay in Normal mode
+vim.keymap.set('n', '<C-;>', 'mmA;<Esc>`m', { desc = 'Append semicolon to end of line' })
+
+-- Insert Mode: Press <C-b> to append a semicolon without leaving Insert mode or moving your cursor
+vim.keymap.set('i', '<C-;>', '<Esc>mmA;<Esc>`ma', { desc = 'Append semicolon from insert mode' })
+
 -- Yank filepath to clipboard
 vim.keymap.set('n', '<leader>yf', function()
   local filepath = vim.fn.expand '%:p'

@@ -61,6 +61,13 @@ return {
         hl['@markup.link'] = { fg = palette.blue, underline = true }
         hl['@markup.link.label'] = { fg = palette.aqua }
         hl['@markup.link.url'] = { fg = palette.blue, italic = true }
+
+        -- Diagnostics: keep syntax highlighting, only show colored undercurl
+        hl.DiagnosticUnderlineError = { undercurl = true, sp = palette.red }
+        hl.DiagnosticUnderlineWarn = { undercurl = true, sp = palette.yellow }
+        hl.DiagnosticUnderlineInfo = { undercurl = true, sp = palette.blue }
+        hl.DiagnosticUnderlineHint = { undercurl = true, sp = palette.purple }
+        hl.DiagnosticUnderlineOk = { undercurl = true, sp = palette.green }
       end,
     }
     vim.cmd.colorscheme 'everforest'
