@@ -28,13 +28,13 @@ return {
   end,
   opts = {
     animate = { enabled = true },
-    scroll = {
-      enabled = true,
-      animate = {
-        duration = { step = 10, total = 100 },
-        easing = 'linear',
-      },
-    },
+    -- scroll = {
+    --   enabled = true,
+    --   animate = {
+    --     duration = { step = 10, total = 100 },
+    --     easing = 'linear',
+    --   },
+    -- },
     indent = { enabled = true },
     lazygit = {},
     input = { enabled = true },
