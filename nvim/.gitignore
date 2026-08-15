@@ -2,6 +2,7 @@ tags
 test.sh
 .luarc.json
 nvim
+lua/custom/local-theme.lua
 
 spell/
 .claude/
