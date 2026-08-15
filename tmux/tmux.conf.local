@@ -594,9 +594,11 @@ tmux_conf_uninstall_plugins_on_reload=true
 #   sleep 300                                         # sleep for 5 minutes, throttle network requests whatever the value of status-interval
 # }
 #
+# local_overrides() {
+#   [ -f "$HOME/.config/tmux/overrides.conf.local" ] && . "$HOME/.config/tmux/overrides.conf.local"
+# }
+#
 # "$@"
 # # /!\ do not remove the previous line
 # #     do not write below this line
-
-# Source custom styling after Oh My Tmux theme is applied
-# source-file ~/.config/tmux.conf.custom
+# local_overrides
