@@ -113,6 +113,7 @@ return { -- Fuzzy Finder (files, lsp, etc)
             width = 0.98,
             height = 0.98,
             preview_height = 0.5,
+            preview_cutoff = 30,
           },
           -- Below flip_columns AND above flip_lines: use vertical (preview below).
           -- Above flip_columns: use horizontal (preview right).
