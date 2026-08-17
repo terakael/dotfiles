@@ -4,6 +4,11 @@ return {
   lazy = false,
   ---@type rustaceanvim.Opts
   opts = {
+    tools = {
+      float_win_config = {
+        border = 'rounded',
+      },
+    },
     server = {
       on_attach = function(client, bufnr)
         local map = function(keys, func, desc)

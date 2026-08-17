@@ -42,6 +42,7 @@ return { -- Autocompletion with blink.cmp
     },
     completion = {
       menu = {
+        border = 'rounded',
         draw = {
           columns = { { 'label', 'label_description', gap = 1 }, { 'kind_icon', 'kind' } },
         },
@@ -49,10 +50,12 @@ return { -- Autocompletion with blink.cmp
       documentation = {
         auto_show = true,
         auto_show_delay_ms = 500,
+        window = { border = 'rounded' },
       },
     },
     signature = {
       enabled = true,
+      window = { border = 'rounded' },
     },
   },
 }
