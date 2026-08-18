@@ -4,6 +4,16 @@ return {
   ---@module 'oil'
   ---@type oil.SetupOpts
   opts = {
+    columns = {
+      'icon',
+      'permissions',
+      'size',
+      'mtime',
+    },
+    float = {
+      border = 'rounded',
+      max_width = 80,
+    },
     keymaps = {
       -- Disable C-h since it conflicts with window navigation
       ['<C-h>'] = false,
