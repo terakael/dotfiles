@@ -10,11 +10,6 @@ return {
       },
     },
     server = {
-      lspmux = {
-        enable = true,
-        host = '127.0.0.1',
-        port = 27631,
-      },
       on_attach = function(client, bufnr)
         local map = function(keys, func, desc)
           vim.keymap.set('n', keys, func, { buffer = bufnr, desc = 'Rust: ' .. desc })
