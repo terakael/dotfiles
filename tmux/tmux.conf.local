@@ -479,6 +479,9 @@ bind -n 'C-S-j' swap-pane -d -t '{down-of}'
 bind -n 'C-S-k' swap-pane -d -t '{up-of}'
 bind -n 'C-S-l' swap-pane -d -t '{right-of}'
 
+bind -r 'C-S-h' swap-window -t -1 \; select-window -t -1  # swap current window with the previous one
+bind -r 'C-S-l' swap-window -t +1 \; select-window -t +1  # swap current window with the next one
+
 # move status line to top
 set -g status-position top
 
