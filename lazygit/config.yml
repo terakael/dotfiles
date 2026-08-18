@@ -44,8 +44,3 @@ customCommands:
     description: 'Show gitignored files'
     command: "git ls-files --others --ignored --exclude-standard --directory --no-empty-directory | grep -E '^[^/]+/?$'"
     output: popup
-os:
-  edit: 'nvim {{filename}}'
-  editAtLine: 'nvim +{{line}} {{filename}}'
-  editAtLineAndWait: 'nvim +{{line}} {{filename}}'
-
