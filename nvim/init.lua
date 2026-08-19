@@ -184,6 +184,7 @@ vim.opt.autoread = true
 -- Terminal handling for tmux/multiplexers
 vim.opt.termguicolors = true
 vim.opt.title = true
+vim.opt.titlestring = "%{expand('%:~:h')}/%t"
 
 -- Fix rendering issues in tmux/multiplexers
 if vim.env.TMUX then
