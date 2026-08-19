@@ -22,7 +22,7 @@ eval "$(awk -F ' = ' '
 accent="${accent:-#8d8d8d}"
 background="${background:-#000000}"
 foreground="${foreground:-#ffffff}"
-selection="${selection:-#1a1a1a}"
+selection="${selection:-#222222}"
 color0="${color0:-#101010}"
 color1="${color1:-#f5a191}"
 color2="${color2:-#90b99f}"
@@ -46,62 +46,100 @@ k9s:
     fgColor: "$foreground"
     bgColor: "$background"
     logoColor: "$accent"
-
+  prompt:
+    fgColor: "$foreground"
+    bgColor: "$background"
+    suggestColor: "$accent"
   info:
-    fgColor: "$color6"
-    sectionColor: "$foreground"
-
+    fgColor: "$color8"
+    sectionColor: "$accent"
+    cpuColor: "$accent"
+    memColor: "$color4"
+  help:
+    fgColor: "$foreground"
+    bgColor: "$selection"
+    keyColor: "$accent"
+    numKeyColor: "$color4"
+    sectionColor: "$accent"
+  dialog:
+    fgColor: "$foreground"
+    bgColor: "$selection"
+    buttonFgColor: "$background"
+    buttonBgColor: "$accent"
+    buttonFocusFgColor: "$background"
+    buttonFocusBgColor: "$color4"
+    labelFgColor: "$color3"
+    fieldFgColor: "$foreground"
   frame:
     border:
       fgColor: "$color8"
       focusColor: "$accent"
-
     menu:
       fgColor: "$foreground"
       keyColor: "$accent"
-      numKeyColor: "$color3"
-
+      numKeyColor: "$color4"
     crumbs:
       fgColor: "$background"
-      bgColor: "$accent"
-      activeColor: "$color2"
-
+      bgColor: "$color8"
+      activeColor: "$accent"
     status:
       newColor: "$color2"
       modifyColor: "$color5"
       addColor: "$color2"
       errorColor: "$color1"
+      pendingColor: "$color3"
       highlightColor: "$accent"
       killColor: "$color8"
       completedColor: "$color8"
-
     title:
-      fgColor: "$foreground"
+      fgColor: "$accent"
       bgColor: "$background"
-      highlightColor: "$accent"
-      counterColor: "$color6"
-      filterColor: "$color8"
-
+      highlightColor: "$color1"
+      counterColor: "$color9"
+      filterColor: "$accent"
   views:
+    charts:
+      bgColor: "$background"
+      defaultDialColors:
+        - "$accent"
+        - "$color1"
+      defaultChartColors:
+        - "$accent"
+        - "$color1"
     table:
       fgColor: "$foreground"
       bgColor: "$background"
-      cursorColor: "$accent"
+      cursorFgColor: "$background"
+      cursorBgColor: "$accent"
       markColor: "$color3"
-      changerColor: "$color5"
       header:
-        fgColor: "$color3"
+        fgColor: "$color8"
         bgColor: "$background"
         sorterColor: "$accent"
-
+    xray:
+      fgColor: "$foreground"
+      bgColor: "$background"
+      cursorColor: "$accent"
+      cursorTextColor: "$background"
+      graphicColor: "$color4"
+      showIcons: false
     yaml:
       keyColor: "$accent"
       colonColor: "$color8"
       valueColor: "$foreground"
-
     logs:
       fgColor: "$foreground"
       bgColor: "$background"
+      indicator:
+        fgColor: "$accent"
+        bgColor: "$background"
+        toggleOnColor: "$color2"
+        toggleOffColor: "$color8"
+    help:
+      fgColor: "$foreground"
+      bgColor: "$selection"
+      indicator:
+        fgColor: "$accent"
 EOF
 
 echo "Generated K9s skin at $SKIN_FILE"
