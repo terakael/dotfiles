@@ -31,6 +31,46 @@ return { -- Collection of various small independent plugins/modules
       return '%2l:%-2v'
     end
 
+    -- Override filename section to show Harpoon list status
+    ---@diagnostic disable-next-line: duplicate-set-field
+    statusline.section_filename = function()
+      local success, harpoon = pcall(require, 'harpoon')
+      if not success then
+        return vim.fn.expand('%:t')
+      end
+
+      local list = harpoon:list()
+      local current_file = vim.fn.expand('%:f')
+      local current_abs = vim.fn.fnamemodify(current_file, ':p')
+
+      local items = {}
+      local found_in_list = false
+
+      for index, item in ipairs(list.items) do
+        local filename = vim.fn.fnamemodify(item.value, ':t')
+        local item_abs = vim.fn.fnamemodify(item.value, ':p')
+
+        if item_abs == current_abs then
+          found_in_list = true
+          table.insert(items, string.format('%%#MiniStatuslineFilename#[%d: %s]', index, filename))
+        else
+          table.insert(items, string.format('%d: %s', index, filename))
+        end
+      end
+
+      -- If current file is not in harpoon list, append it without a number
+      if not found_in_list and current_file ~= '' then
+        local current_filename = vim.fn.fnamemodify(current_file, ':t')
+        table.insert(items, string.format('%%#MiniStatuslineFilename#[%s]', current_filename))
+      end
+
+      if #items == 0 then
+        return 'No harpoon files'
+      end
+
+      return table.concat(items, '  ')
+    end
+
     -- ... and there is more!
     --  Check out: https://github.com/echasnovski/mini.nvim
   end,
