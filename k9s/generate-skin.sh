@@ -12,7 +12,7 @@ fi
 
 # Parse colors from colors.toml using awk
 eval "$(awk -F ' = ' '
-  /^(accent|background|foreground|red|green|yellow|blue|magenta|cyan|muted|selection) / {
+  /^(accent|background|foreground|selection|color[0-9]+) / {
     gsub(/"/, "", $2);
     print $1 "=\"" $2 "\""
   }
@@ -22,12 +22,23 @@ eval "$(awk -F ' = ' '
 accent="${accent:-#8d8d8d}"
 background="${background:-#000000}"
 foreground="${foreground:-#ffffff}"
-muted="${muted:-#7a7a7a}"
 selection="${selection:-#1a1a1a}"
-cyan="${cyan:-#b0b0b0}"
-yellow="${yellow:-#cecece}"
-green="${green:-#b6b6b6}"
-red="${red:-#a4a4a4}"
+color0="${color0:-#101010}"
+color1="${color1:-#f5a191}"
+color2="${color2:-#90b99f}"
+color3="${color3:-#e6b99d}"
+color4="${color4:-#aca1cf}"
+color5="${color5:-#e29eca}"
+color6="${color6:-#ea83a5}"
+color7="${color7:-#ffffff}"
+color8="${color8:-#7e7e7e}"
+color9="${color9:-#ff8080}"
+color10="${color10:-#99ffe4}"
+color11="${color11:-#ffc799}"
+color12="${color12:-#b9aeda}"
+color13="${color13:-#ecaad6}"
+color14="${color14:-#f591b2}"
+color15="${color15:-#ffffff}"
 
 cat > "$SKIN_FILE" <<EOF
 k9s:
@@ -37,53 +48,55 @@ k9s:
     logoColor: "$accent"
 
   info:
-    fgColor: "$cyan"
+    fgColor: "$color6"
     sectionColor: "$foreground"
 
   frame:
     border:
-      fgColor: "$muted"
+      fgColor: "$color8"
       focusColor: "$accent"
 
     menu:
       fgColor: "$foreground"
       keyColor: "$accent"
-      numKeyColor: "$yellow"
+      numKeyColor: "$color3"
 
     crumbs:
       fgColor: "$background"
       bgColor: "$accent"
-      activeColor: "$green"
+      activeColor: "$color2"
 
     status:
-      newColor: "$green"
-      modifyColor: "$cyan"
-      addColor: "$green"
-      errorColor: "$red"
-      highlightcolor: "$accent"
-      killColor: "$muted"
-      completedColor: "$muted"
+      newColor: "$color2"
+      modifyColor: "$color5"
+      addColor: "$color2"
+      errorColor: "$color1"
+      highlightColor: "$accent"
+      killColor: "$color8"
+      completedColor: "$color8"
 
     title:
       fgColor: "$foreground"
       bgColor: "$background"
       highlightColor: "$accent"
-      counterColor: "$cyan"
-      filterColor: "$muted"
+      counterColor: "$color6"
+      filterColor: "$color8"
 
   views:
     table:
       fgColor: "$foreground"
       bgColor: "$background"
-      cursorColor: "$selection"
+      cursorColor: "$accent"
+      markColor: "$color3"
+      changerColor: "$color5"
       header:
-        fgColor: "$yellow"
+        fgColor: "$color3"
         bgColor: "$background"
         sorterColor: "$accent"
 
     yaml:
       keyColor: "$accent"
-      colonColor: "$muted"
+      colonColor: "$color8"
       valueColor: "$foreground"
 
     logs:
