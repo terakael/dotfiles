@@ -23,12 +23,48 @@ return { -- Collection of various small independent plugins/modules
     -- set use_icons to true if you have a Nerd Font
     statusline.setup { use_icons = vim.g.have_nerd_font }
 
+    -- Remove filetype from fileinfo section
+    ---@diagnostic disable-next-line: duplicate-set-field
+    statusline.section_fileinfo = function(args)
+      if statusline.is_truncated(args.trunc_width) or vim.bo.buftype ~= '' then
+        return ''
+      end
+      local encoding = vim.bo.fileencoding or vim.bo.encoding
+      local format = vim.bo.fileformat
+      local size = statusline.get_filesize and statusline.get_filesize() or ''
+      return string.format('%s[%s] %s', encoding, format, size)
+    end
+
     -- You can configure sections in the statusline by overriding their
     -- default behavior. For example, here we set the section for
     -- cursor location to LINE:COLUMN
     ---@diagnostic disable-next-line: duplicate-set-field
     statusline.section_location = function()
       return '%2l:%-2v'
+    end
+
+    -- Customize active content to place harpoon/filename on the right
+    ---@diagnostic disable-next-line: duplicate-set-field
+    statusline.active = function()
+      local mode, mode_hl = statusline.section_mode({ trunc_width = 120 })
+      local git           = statusline.section_git({ trunc_width = 40 })
+      local diff          = statusline.section_diff({ trunc_width = 75 })
+      local diagnostics   = statusline.section_diagnostics({ trunc_width = 75 })
+      local lsp           = statusline.section_lsp({ trunc_width = 75 })
+      local filename      = statusline.section_filename({ trunc_width = 140 })
+      local fileinfo      = statusline.section_fileinfo({ trunc_width = 120 })
+      local location      = statusline.section_location({ trunc_width = 75 })
+      local search        = statusline.section_searchcount({ trunc_width = 75 })
+
+      return statusline.combine_groups({
+        { hl = mode_hl,                  strings = { mode } },
+        { hl = 'MiniStatuslineDevinfo',  strings = { git, diff, diagnostics, lsp } },
+        '%<', -- Mark general truncate point
+        '%=', -- Right-align everything after this point
+        { hl = 'MiniStatuslineFilename', strings = { filename } },
+        { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
+        { hl = mode_hl,                  strings = { search, location } },
+      })
     end
 
     -- Override filename section to show Harpoon list status
