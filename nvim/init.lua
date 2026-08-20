@@ -174,10 +174,6 @@ vim.opt.cursorline = true
 vim.opt.scrolloff = 10
 vim.opt.jumpoptions = 'view'
 
--- Enable folding
-vim.opt.foldmethod = 'indent'
-vim.opt.foldlevel = 99
-
 -- Automatically reload files changed outside of Neovim
 vim.opt.autoread = true
 
