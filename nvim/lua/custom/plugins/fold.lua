@@ -49,7 +49,7 @@ return {
     }
 
     -- ufo needs a high foldlevel; it sets foldmethod=manual itself
-    vim.o.foldcolumn = '1'
+    vim.o.foldcolumn = '0'
     vim.o.foldlevel = 99
     vim.o.foldlevelstart = 99
     vim.o.foldenable = true
@@ -58,5 +58,20 @@ return {
     vim.keymap.set('n', 'zM', ufo.closeAllFolds, { desc = 'Close all folds' })
     vim.keymap.set('n', 'zr', ufo.openFoldsExceptKinds, { desc = 'Open folds by kind' })
     vim.keymap.set('n', 'zm', ufo.closeFoldsWith, { desc = 'Close folds by kind' })
+
+    -- Harpoon (and other tools) pre-load a buffer with bufload() before
+    -- showing it via nvim_set_current_buf. ufo attaches the buffer during
+    -- bufload() when it has no window yet, so it skips the fold update, and
+    -- skips the first-apply that auto-closes imports. Re-trigger the fold
+    -- update on BufWinEnter so folds and import auto-closing still apply.
+    -- enableFold() is idempotent and cheap for unchanged buffers.
+    vim.api.nvim_create_autocmd('BufWinEnter', {
+      group = vim.api.nvim_create_augroup('ufo-refresh', { clear = true }),
+      callback = function()
+        vim.schedule(function()
+          ufo.enableFold()
+        end)
+      end,
+    })
   end,
 }
