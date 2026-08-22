@@ -182,6 +182,8 @@ vim.opt.termguicolors = true
 vim.opt.title = true
 vim.opt.titlestring = "%{expand('%:~:h')}/%t"
 
+vim.o.swapfile = false
+
 -- Fix rendering issues in tmux/multiplexers
 if vim.env.TMUX then
   vim.opt.ttimeoutlen = 10
