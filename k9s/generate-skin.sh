@@ -2,21 +2,24 @@
 set -euo pipefail
 
 CURRENT_THEME_PATH="$HOME/.local/state/omarchy/current/theme"
-COLORS_TOML="$CURRENT_THEME_PATH/colors.toml"
+GHOSTTY_CONF="$CURRENT_THEME_PATH/ghostty.conf"
 SKIN_FILE="${1:-skins/omarchy.yaml}"
 
-if [[ ! -f "$COLORS_TOML" ]]; then
-  echo "Error: colors.toml not found at $COLORS_TOML" >&2
+if [[ ! -f "$GHOSTTY_CONF" ]]; then
+  echo "Error: ghostty.conf not found at $GHOSTTY_CONF" >&2
   exit 1
 fi
 
-# Parse colors from colors.toml using awk
-eval "$(awk -F ' = ' '
-  /^(accent|background|foreground|selection|color[0-9]+) / {
-    gsub(/"/, "", $2);
-    print $1 "=\"" $2 "\""
-  }
-' "$COLORS_TOML")"
+# Parse colors from ghostty.conf
+background=$(grep "^background" "$GHOSTTY_CONF" | cut -d= -f2 | tr -d ' "' || true)
+foreground=$(grep "^foreground" "$GHOSTTY_CONF" | cut -d= -f2 | tr -d ' "' || true)
+selection=$(grep "^selection-background" "$GHOSTTY_CONF" | cut -d= -f2 | tr -d ' "' || true)
+for i in $(seq 0 15); do
+  eval "color$i=\$(grep \"^palette = $i=\" \"$GHOSTTY_CONF\" | cut -d= -f3 | tr -d ' \"' || true)"
+done
+
+# ghostty.conf has no accent field - reuse blue (palette 4)
+accent="$color4"
 
 # Fallbacks if any color is missing
 accent="${accent:-#8d8d8d}"
