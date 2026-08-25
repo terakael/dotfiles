@@ -113,7 +113,7 @@ return { -- Collection of various small independent plugins/modules
       end
 
       if #items == 0 then
-        return 'No harpoon files'
+        return ''
       end
 
       return table.concat(items, '  ')
