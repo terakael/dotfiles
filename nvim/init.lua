@@ -91,6 +91,7 @@ require('vim._core.ui2').enable {}
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
+vim.opt.cmdheight = 0
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
@@ -180,7 +181,7 @@ vim.opt.autoread = true
 -- Terminal handling for tmux/multiplexers
 vim.opt.termguicolors = true
 vim.opt.title = true
-vim.opt.titlestring = "%{expand('%:~:h')}/%t"
+vim.opt.titlestring = "%{expand('%:.:h')}/%t"
 
 vim.o.swapfile = false
 
@@ -199,7 +200,14 @@ end
 
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
-vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+vim.keymap.set('n', '<Esc>', function()
+  if vim.v.hlsearch == 1 then
+    vim.cmd 'nohlsearch'
+  else
+    local mc_ns = vim.api.nvim_create_namespace 'nvim.multicursor'
+    vim.api.nvim_buf_clear_namespace(0, mc_ns, 0, -1)
+  end
+end)
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
@@ -265,7 +273,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function()
-    vim.highlight.on_yank()
+    vim.hl.on_yank()
   end,
 })
 
