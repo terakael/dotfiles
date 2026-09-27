@@ -124,8 +124,8 @@ return {
     -- Global styles for all Snacks windows
     styles = {
       lazygit = {
-        width = 0.98,
-        height = 0.98,
+        width = 0,
+        height = 0,
       },
     },
   },
