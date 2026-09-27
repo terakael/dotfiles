@@ -181,7 +181,7 @@ vim.opt.autoread = true
 -- Terminal handling for tmux/multiplexers
 vim.opt.termguicolors = true
 vim.opt.title = true
-vim.opt.titlestring = "%{expand('%:.:h')}/%t"
+vim.opt.titlestring = "%{expand('%:~:h')}/%t"
 
 vim.o.swapfile = false
 
@@ -392,9 +392,9 @@ require('lazy').setup({
   { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
-  -- Or use telescope!
+  -- Or use Snacks picker!
   -- In normal mode type `<space>sh` then write `lazy.nvim-plugin`
-  -- you can continue same window with `<space>sr` which resumes last telescope search
+  -- you can continue same window with `<space>sr` which resumes the last picker
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
