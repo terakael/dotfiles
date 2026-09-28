@@ -43,7 +43,9 @@ return {
     vim.keymap.set('n', '<leader>sr', picker.resume, { desc = '[S]earch [R]esume' })
     vim.keymap.set('n', '<leader>s.', picker.recent, { desc = '[S]earch Recent Files ("." for repeat)' })
     vim.keymap.set('n', '<leader>sm', picker.marks, { desc = '[S]earch [M]arks' })
-    vim.keymap.set('n', '<leader><leader>', picker.buffers, { desc = '[ ] Find existing buffers' })
+    vim.keymap.set('n', '<leader><leader>', function()
+      require('custom.buffers_harpoon').pick()
+    end, { desc = '[ ] Find existing buffers + harpoon' })
 
     -- Grep only in open buffers
     vim.keymap.set('n', '<leader>s/', function()
@@ -102,6 +104,7 @@ return {
     picker = {
       enabled = true,
       layout = {
+        preset = 'ivy',
         fullscreen = true,
       },
       matcher = {
